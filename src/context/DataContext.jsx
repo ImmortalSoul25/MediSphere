@@ -1,9 +1,19 @@
 // src/context/DataContext.jsx
+//
+// FIX: Vite Fast Refresh requires a file to export ONLY React components OR
+// only non-components (hooks, utils). Previously this file exported both
+// DataProvider (component) and useData (hook), causing the HMR warning.
+//
+// SOLUTION: useData has been moved to src/context/useData.js
+// Update any file that does:
+//   import { useData } from "../context/DataContext"
+// to:
+//   import { useData } from "../context/useData"
 
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
-import { buildDefaultTemplates } from "../utils/excelStore";
+import { createContext, useState, useEffect, useCallback, useRef } from "react";
 
-const DataContext = createContext(null);
+// Export the raw context so useData.js can import it
+export const DataContext = createContext(null);
 
 export function DataProvider({ children }) {
   const [patients,  setPatients]  = useState(null);
@@ -11,37 +21,36 @@ export function DataProvider({ children }) {
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);
 
-  // Refs so persistPatients/persistTemplates always see the latest state
   const patientsRef  = useRef(null);
   const templatesRef = useRef(null);
 
   useEffect(() => { patientsRef.current  = patients;  }, [patients]);
   useEffect(() => { templatesRef.current = templates; }, [templates]);
 
-  // ── Load from server on mount ─────────────────────────────────────────────
+  // ── Load from server on mount ───────────────────────────────────────────────
   useEffect(() => {
     fetch("/api/data")
       .then((r) => r.json())
       .then((data) => {
-        setPatients(data.patients);
-        setTemplates(data.templates.length > 0 ? data.templates : buildDefaultTemplates());
+        setPatients(data.patients   || []);
+        setTemplates(data.templates || []);
       })
       .catch((err) => {
         console.error("Failed to load data:", err);
         setError("Could not connect to the local server. Is server.js running?");
         setPatients([]);
-        setTemplates(buildDefaultTemplates());
+        setTemplates([]);
       })
       .finally(() => setLoading(false));
   }, []);
 
-  // ── Persist helpers ───────────────────────────────────────────────────────
+  // ── Persist helpers ─────────────────────────────────────────────────────────
   const persistPatients = useCallback(async (nextPatients) => {
     try {
       const res = await fetch("/api/patients", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ patients: nextPatients }),
+        body:    JSON.stringify({ patients: nextPatients }),
       });
       if (!res.ok) console.error("Save patients failed:", await res.text());
     } catch (err) {
@@ -52,9 +61,9 @@ export function DataProvider({ children }) {
   const persistTemplates = useCallback(async (nextTemplates) => {
     try {
       const res = await fetch("/api/templates", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ templates: nextTemplates }),
+        body:    JSON.stringify({ templates: nextTemplates }),
       });
       if (!res.ok) console.error("Save templates failed:", await res.text());
     } catch (err) {
@@ -62,7 +71,7 @@ export function DataProvider({ children }) {
     }
   }, []);
 
-  // ── Patient mutations ─────────────────────────────────────────────────────
+  // ── Patient mutations ───────────────────────────────────────────────────────
   const addPatient = useCallback((patient) => {
     const next = [...(patientsRef.current || []), patient];
     setPatients(next);
@@ -77,7 +86,13 @@ export function DataProvider({ children }) {
     persistPatients(next);
   }, [persistPatients]);
 
-  // ── Template mutations ────────────────────────────────────────────────────
+  const deletePatient = useCallback((id) => {
+    const next = (patientsRef.current || []).filter((p) => p.id !== id);
+    setPatients(next);
+    persistPatients(next);
+  }, [persistPatients]);
+
+  // ── Template mutations ──────────────────────────────────────────────────────
   const updateTemplate = useCallback((week, message) => {
     const next = (templatesRef.current || []).map((t) =>
       t.week === week ? { ...t, message } : t
@@ -86,23 +101,25 @@ export function DataProvider({ children }) {
     persistTemplates(next);
   }, [persistTemplates]);
 
-  const isLoaded = patients !== null && templates !== null;
-
   return (
     <DataContext.Provider value={{
       patients,
       templates,
       loading,
       error,
-      isLoaded,
+      isLoaded: patients !== null && templates !== null,
       addPatient,
       updatePatient,
+      deletePatient,
       updateTemplate,
     }}>
       {children}
     </DataContext.Provider>
   );
 }
+
+// Add this back at the bottom of DataContext.jsx
+import { useContext } from "react"; // already imported above
 
 export function useData() {
   const ctx = useContext(DataContext);
