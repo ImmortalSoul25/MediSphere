@@ -6,7 +6,8 @@ import {
   LayoutDashboard,
   Users,
   CalendarDays,
-  MessageSquareText,
+  Send,
+  FileText,
   Settings,
   ChevronDown,
   ClockAlert,
@@ -14,7 +15,6 @@ import {
   CalendarX,
 } from "lucide-react";
 
-// ─── Simple nav item (no children) ───────────────────────────────────────────
 function NavItem({ to, label, Icon }) {
   return (
     <NavLink
@@ -30,11 +30,9 @@ function NavItem({ to, label, Icon }) {
     >
       {({ isActive }) => (
         <>
-          <Icon
-            size={18}
+          <Icon size={18}
             className={isActive ? "text-white" : "text-slate-400 group-hover:text-slate-200"}
-            strokeWidth={isActive ? 2.5 : 2}
-          />
+            strokeWidth={isActive ? 2.5 : 2} />
           <span>{label}</span>
           {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-300" />}
         </>
@@ -43,7 +41,6 @@ function NavItem({ to, label, Icon }) {
   );
 }
 
-// ─── Expandable nav group (Appointments dropdown) ─────────────────────────────
 const APPT_ROUTES = [
   "/appointments/requests",
   "/appointments/scheduled",
@@ -51,14 +48,12 @@ const APPT_ROUTES = [
 ];
 
 function NavGroup({ label, Icon, children }) {
-  const location = useLocation();
+  const location     = useLocation();
   const isGroupActive = APPT_ROUTES.some((r) => location.pathname.startsWith(r));
-
   const [open, setOpen] = useState(isGroupActive);
 
   return (
     <div>
-      {/* Group header button */}
       <button
         onClick={() => setOpen((o) => !o)}
         className={[
@@ -68,19 +63,14 @@ function NavGroup({ label, Icon, children }) {
             : "text-slate-300 hover:bg-slate-700/60 hover:text-white",
         ].join(" ")}
       >
-        <Icon
-          size={18}
+        <Icon size={18}
           className={isGroupActive ? "text-indigo-300" : "text-slate-400 group-hover:text-slate-200"}
-          strokeWidth={2}
-        />
+          strokeWidth={2} />
         <span className="flex-1 text-left">{label}</span>
-        <ChevronDown
-          size={14}
-          className={`text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-        />
+        <ChevronDown size={14}
+          className={`text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
 
-      {/* Children */}
       {open && (
         <div className="mt-0.5 ml-4 pl-3 border-l border-slate-700 space-y-0.5">
           {children}
@@ -105,11 +95,9 @@ function SubNavItem({ to, label, Icon }) {
     >
       {({ isActive }) => (
         <>
-          <Icon
-            size={15}
+          <Icon size={15}
             className={isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"}
-            strokeWidth={isActive ? 2.5 : 2}
-          />
+            strokeWidth={isActive ? 2.5 : 2} />
           <span>{label}</span>
         </>
       )}
@@ -117,37 +105,32 @@ function SubNavItem({ to, label, Icon }) {
   );
 }
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
 export default function Sidebar() {
   return (
     <aside className="w-[260px] flex-shrink-0 flex flex-col min-h-screen bg-slate-900 select-none">
 
-      {/* Logo */}
       <div className="px-5 py-4 border-b border-slate-700/60">
-        <img
-          src="/logo.jpg"
-          alt="Portal"
-          className="w-full h-26 object-contain object-left"
-        />
+        <img src="/logo.jpg" alt="Portal"
+          className="w-full h-26 object-contain object-left" />
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
         <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
           Main Menu
         </p>
 
-        <NavItem to="/dashboard"    label="Dashboard"      Icon={LayoutDashboard} />
-        <NavItem to="/patients"     label="Patients"       Icon={Users} />
+        <NavItem to="/dashboard"         label="Dashboard"          Icon={LayoutDashboard} />
+        <NavItem to="/patients"          label="Patients"           Icon={Users} />
 
         <NavGroup label="Appointments" Icon={CalendarDays}>
-          <SubNavItem to="/appointments/requests"   label="Requests Pending"      Icon={ClockAlert} />
-          <SubNavItem to="/appointments/scheduled"  label="Scheduled"             Icon={CalendarCheck} />
-          <SubNavItem to="/appointments/past"       label="Past Appointments"     Icon={CalendarX} />
+          <SubNavItem to="/appointments/requests"  label="Requests Pending"  Icon={ClockAlert} />
+          <SubNavItem to="/appointments/scheduled" label="Scheduled"         Icon={CalendarCheck} />
+          <SubNavItem to="/appointments/past"      label="Past Appointments" Icon={CalendarX} />
         </NavGroup>
 
-        <NavItem to="/communications" label="Communications" Icon={MessageSquareText} />
-        <NavItem to="/settings"       label="Settings"       Icon={Settings} />
+        <NavItem to="/send-messages"     label="Send Messages"      Icon={Send} />
+        <NavItem to="/message-templates" label="Message Templates"  Icon={FileText} />
+        <NavItem to="/settings"          label="Settings"           Icon={Settings} />
       </nav>
     </aside>
   );

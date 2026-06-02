@@ -1,3 +1,5 @@
+// server.js — project root
+
 import express from "express";
 import fs      from "fs";
 import path    from "path";
@@ -17,9 +19,10 @@ const APPOINTMENTS_FILE = path.join(__dirname, "appointments-data.xlsx");
 // ─── Sheet names ──────────────────────────────────────────────────────────────
 const SH_PATIENTS  = "Patients";
 const SH_TEMPLATES = "Templates";
-const SH_REQUESTS  = "Requests";
-const SH_SCHEDULED = "Scheduled";
-const SH_PAST      = "Past";
+
+const SH_REQUESTS    = "Requests";
+const SH_SCHEDULED   = "Scheduled";
+const SH_PAST        = "Past";
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -67,24 +70,28 @@ function readPatientsWorkbook() {
 function buildPatientsWorkbook(patients, templates) {
   const wb = XLSX.utils.book_new();
 
+  // ── Patients sheet ──────────────────────────────────────────────────────────
   const patientRows = patients.map((p) => ({
-    "Patient ID":        p.id,
-    "Name":              p.name,
-    "Contact":           p.contact,
-    "Age":               p.age === "" || p.age == null ? "" : Number(p.age),
-    "Condition":         p.condition      || "",
-    "Due Date":          toDate(p.dueDate) || "",
-    "First Appointment": toDate(p.firstAppointment) || "",
-    "Last Appointment":  toDate(p.lastAppointment)  || "",
-    "Diagnosis":         p.diagnosis      || "",
-    "Remarks":           p.remarks        || "",
-    "Active":            p.active ? "true" : "false",
+    "Patient ID":            p.id,
+    "Name":                  p.name,
+    "Contact":               p.contact,
+    "Age":                   p.age === "" || p.age == null ? "" : Number(p.age),
+    "Condition":             p.condition      || "",
+    "Due Date":              toDate(p.dueDate) || "",
+    "First Appointment":     toDate(p.firstAppointment) || "",
+    "Last Appointment":      toDate(p.lastAppointment)  || "",
+    "Diagnosis":             p.diagnosis      || "",
+    "Remarks":               p.remarks        || "",
+    "Active":                p.active ? "true" : "false",
   }));
 
   const wsP = XLSX.utils.json_to_sheet(patientRows, { cellDates: true });
+
+  // Columns: 0=ID 1=Name 2=Contact 3=Age 4=Condition 5=DueDate 6=FirstAppt 7=LastAppt 8=Diagnosis 9=Remarks 10=Active
   applyDateFormat(wsP, 5);
   applyDateFormat(wsP, 6);
   applyDateFormat(wsP, 7);
+
   wsP["!cols"] = [
     { wch: 12 }, { wch: 24 }, { wch: 14 }, { wch: 6 },
     { wch: 16 }, { wch: 14 }, { wch: 16 }, { wch: 16 },
@@ -92,6 +99,7 @@ function buildPatientsWorkbook(patients, templates) {
   ];
   XLSX.utils.book_append_sheet(wb, wsP, SH_PATIENTS);
 
+  // ── Templates sheet (preserved as-is) ──────────────────────────────────────
   const templateRows = templates.map((t) => ({ "Week": t.week, "Message": t.message }));
   const wsT = XLSX.utils.json_to_sheet(templateRows);
   wsT["!cols"] = [{ wch: 6 }, { wch: 80 }];
@@ -147,6 +155,7 @@ function readAppointmentsWorkbook() {
 function buildAppointmentsWorkbook(requests, scheduled, past) {
   const wb = XLSX.utils.book_new();
 
+  // ── Requests sheet ──────────────────────────────────────────────────────────
   const reqRows = requests.map((r) => ({
     "Request ID":     r.id,
     "Patient ID":     r.patientId,
@@ -166,6 +175,7 @@ function buildAppointmentsWorkbook(requests, scheduled, past) {
   ];
   XLSX.utils.book_append_sheet(wb, wsReq, SH_REQUESTS);
 
+  // ── Scheduled sheet ─────────────────────────────────────────────────────────
   const schRows = scheduled.map((s) => ({
     "Appointment ID":   s.id,
     "Patient ID":       s.patientId,
@@ -183,6 +193,7 @@ function buildAppointmentsWorkbook(requests, scheduled, past) {
   ];
   XLSX.utils.book_append_sheet(wb, wsSch, SH_SCHEDULED);
 
+  // ── Past sheet ──────────────────────────────────────────────────────────────
   const pastRows = past.map((p) => ({
     "Appointment ID":   p.id,
     "Patient ID":       p.patientId,
@@ -204,14 +215,14 @@ function buildAppointmentsWorkbook(requests, scheduled, past) {
 }
 
 function parseRequests(wb) {
-  const ws = wb.Sheets[SH_REQUESTS];
+  const ws = wb?.Sheets[SH_REQUESTS];
   if (!ws) return [];
   return XLSX.utils.sheet_to_json(ws, { defval: "", cellDates: true }).map((row) => ({
-    id:            String(row["Request ID"]    ?? "").trim(),
-    patientId:     String(row["Patient ID"]    ?? "").trim(),
-    patientName:   String(row["Patient Name"]  ?? "").trim(),
-    contact:       String(row["Contact"]       ?? "").trim(),
-    age:           String(row["Age"]           ?? "").trim(),
+    id:            String(row["Request ID"]     ?? "").trim(),
+    patientId:     String(row["Patient ID"]     ?? "").trim(),
+    patientName:   String(row["Patient Name"]   ?? "").trim(),
+    contact:       String(row["Contact"]        ?? "").trim(),
+    age:           String(row["Age"]            ?? "").trim(),
     requestedDate: fromExcelDate(row["Requested Date"]),
     requestedSlot: String(row["Requested Slot"] ?? "").trim(),
     requestedOn:   fromExcelDate(row["Requested On"]),
@@ -219,7 +230,7 @@ function parseRequests(wb) {
 }
 
 function parseScheduled(wb) {
-  const ws = wb.Sheets[SH_SCHEDULED];
+  const ws = wb?.Sheets[SH_SCHEDULED];
   if (!ws) return [];
   return XLSX.utils.sheet_to_json(ws, { defval: "", cellDates: true }).map((row) => ({
     id:              String(row["Appointment ID"]   ?? "").trim(),
@@ -233,7 +244,7 @@ function parseScheduled(wb) {
 }
 
 function parsePast(wb) {
-  const ws = wb.Sheets[SH_PAST];
+  const ws = wb?.Sheets[SH_PAST];
   if (!ws) return [];
   return XLSX.utils.sheet_to_json(ws, { defval: "", cellDates: true }).map((row) => ({
     id:              String(row["Appointment ID"]   ?? "").trim(),
@@ -246,7 +257,7 @@ function parsePast(wb) {
   })).filter((r) => r.id);
 }
 
-// Move past-due scheduled appointments into the past sheet automatically
+// Move past-due scheduled appointments into the past sheet
 function migratePastAppointments(scheduled, past) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -257,6 +268,7 @@ function migratePastAppointments(scheduled, past) {
   for (const appt of scheduled) {
     const d = toDate(appt.appointmentDate);
     if (d && d < today) {
+      // Already in past? skip duplicate
       if (!newPast.find((p) => p.id === appt.id)) newPast.push(appt);
     } else {
       stillScheduled.push(appt);
@@ -267,6 +279,7 @@ function migratePastAppointments(scheduled, past) {
 }
 
 function saveAppointments(requests, scheduled, past) {
+  // Run migration before saving
   const { scheduled: sch, past: p } = migratePastAppointments(scheduled, past);
   const wb = buildAppointmentsWorkbook(requests, sch, p);
   XLSX.writeFile(wb, APPOINTMENTS_FILE, { cellDates: true });
@@ -322,16 +335,16 @@ app.post("/api/templates", (req, res) => {
 //  ROUTES — Appointments
 // ─────────────────────────────────────────────────────────────────────────────
 
-// GET all appointments (runs migration on load)
+// GET all appointments data (runs migration on load)
 app.get("/api/appointments", (req, res) => {
   try {
     const wb = readAppointmentsWorkbook();
-    if (!wb) return res.json({ requests: [], scheduled: [], past: [] });
 
-    let requests  = parseRequests(wb);
-    let scheduled = parseScheduled(wb);
-    let past      = parsePast(wb);
+    let requests  = wb ? parseRequests(wb)  : [];
+    let scheduled = wb ? parseScheduled(wb) : [];
+    let past      = wb ? parsePast(wb)      : [];
 
+    // Auto-migrate past-due scheduled appointments → past
     const migrated = migratePastAppointments(scheduled, past);
     if (migrated.scheduled.length !== scheduled.length) {
       saveAppointments(requests, migrated.scheduled, migrated.past);
@@ -339,7 +352,7 @@ app.get("/api/appointments", (req, res) => {
       past      = migrated.past;
     }
 
-    res.json({ requests, scheduled, past });
+    res.json({ ok: true, requests, scheduled, past });
   } catch (err) {
     console.error("GET /api/appointments:", err);
     res.status(500).json({ error: err.message });
@@ -359,7 +372,10 @@ app.post("/api/appointments/approve", (req, res) => {
     const request = requests.find((r) => r.id === requestId);
     if (!request) return res.status(404).json({ error: "Request not found" });
 
-    requests  = requests.filter((r) => r.id !== requestId);
+    // Remove from requests
+    requests = requests.filter((r) => r.id !== requestId);
+
+    // Add to scheduled
     const newAppt = {
       id:              `APT-${Date.now()}`,
       patientId:       request.patientId,
@@ -409,9 +425,6 @@ app.post("/api/appointments/reschedule", (req, res) => {
     let scheduled = wb ? parseScheduled(wb) : [];
     let past      = wb ? parsePast(wb)      : [];
 
-    const exists = scheduled.find((s) => s.id === appointmentId);
-    if (!exists) return res.status(404).json({ error: "Appointment not found" });
-
     scheduled = scheduled.map((s) =>
       s.id === appointmentId ? { ...s, appointmentDate, appointmentTime } : s
     );
@@ -424,72 +437,7 @@ app.post("/api/appointments/reschedule", (req, res) => {
   }
 });
 
-// ─── FIX: Cancel a scheduled appointment (removes it permanently) ─────────────
-// This endpoint was MISSING — the context called it but got a 404 every time,
-// so the appointment was never actually removed from the Excel file or the UI.
-app.post("/api/appointments/cancel", (req, res) => {
-  try {
-    const { appointmentId } = req.body;
-    if (!appointmentId) return res.status(400).json({ error: "appointmentId is required" });
-
-    const wb = readAppointmentsWorkbook();
-
-    let requests  = wb ? parseRequests(wb)  : [];
-    let scheduled = wb ? parseScheduled(wb) : [];
-    let past      = wb ? parsePast(wb)      : [];
-
-    const exists = scheduled.find((s) => s.id === appointmentId);
-    if (!exists) return res.status(404).json({ error: "Appointment not found" });
-
-    // Simply remove from scheduled — cancelled appointments do NOT go to past
-    scheduled = scheduled.filter((s) => s.id !== appointmentId);
-
-    const result = saveAppointments(requests, scheduled, past);
-    res.json({ ok: true, ...result });
-  } catch (err) {
-    console.error("POST /api/appointments/cancel:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ─── FIX: Add a new appointment directly to scheduled ─────────────────────────
-// This endpoint was MISSING — the "Add Appointment" button in ScheduledAppointments
-// called it but got a 404, so nothing was ever added.
-app.post("/api/appointments/add", (req, res) => {
-  try {
-    const { appointment } = req.body;
-    if (!appointment) return res.status(400).json({ error: "appointment object is required" });
-    if (!appointment.patientName) return res.status(400).json({ error: "patientName is required" });
-    if (!appointment.appointmentDate) return res.status(400).json({ error: "appointmentDate is required" });
-    if (!appointment.appointmentTime) return res.status(400).json({ error: "appointmentTime is required" });
-
-    const wb = readAppointmentsWorkbook();
-
-    let requests  = wb ? parseRequests(wb)  : [];
-    let scheduled = wb ? parseScheduled(wb) : [];
-    let past      = wb ? parsePast(wb)      : [];
-
-    const newAppt = {
-      id:              `APT-${Date.now()}`,
-      patientId:       appointment.patientId       || "",
-      patientName:     appointment.patientName,
-      contact:         appointment.contact         || "",
-      age:             appointment.age             || "",
-      appointmentDate: appointment.appointmentDate,
-      appointmentTime: appointment.appointmentTime,
-    };
-
-    scheduled = [...scheduled, newAppt];
-
-    const result = saveAppointments(requests, scheduled, past);
-    res.json({ ok: true, ...result });
-  } catch (err) {
-    console.error("POST /api/appointments/add:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// POST save all appointments (bulk update)
+// POST save all appointments (bulk update — used by context)
 app.post("/api/appointments/save", (req, res) => {
   try {
     const { requests, scheduled, past } = req.body;
@@ -501,9 +449,233 @@ app.post("/api/appointments/save", (req, res) => {
   }
 });
 
+// POST cancel a scheduled appointment → removes from scheduled
+app.post("/api/appointments/cancel", (req, res) => {
+  try {
+    const { appointmentId } = req.body;
+    const wb = readAppointmentsWorkbook();
+
+    let requests  = wb ? parseRequests(wb)  : [];
+    let scheduled = wb ? parseScheduled(wb) : [];
+    let past      = wb ? parsePast(wb)      : [];
+
+    scheduled = scheduled.filter((s) => s.id !== appointmentId);
+
+    const result = saveAppointments(requests, scheduled, past);
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    console.error("POST /api/appointments/cancel:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST add a direct appointment (bypasses requests)
+app.post("/api/appointments/add", (req, res) => {
+  try {
+    const { appointment } = req.body;
+    const wb = readAppointmentsWorkbook();
+
+    let requests  = wb ? parseRequests(wb)  : [];
+    let scheduled = wb ? parseScheduled(wb) : [];
+    let past      = wb ? parsePast(wb)      : [];
+
+    scheduled = [...scheduled, { ...appointment, id: appointment.id || `APT-${Date.now()}` }];
+
+    const result = saveAppointments(requests, scheduled, past);
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    console.error("POST /api/appointments/add:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`✅ Portal API running on http://localhost:${PORT}`);
   console.log(`📄 Patients:     ${PATIENTS_FILE}`);
   console.log(`📄 Appointments: ${APPOINTMENTS_FILE}`);
+});
+
+// =============================================================================
+//  MESSAGE TEMPLATES  (message-templates.xlsx)
+// =============================================================================
+
+const MSG_TEMPLATES_FILE  = path.join(__dirname, "message-templates.xlsx");
+const SH_MSG_PREGNANCY    = "Pregnancy";
+const SH_MSG_OTHER        = "Other Conditions";
+const SH_MSG_APPOINTMENTS = "Appointments";
+
+// ─── Default pregnancy templates (weeks 1-40) ─────────────────────────────────
+function defaultPregnancyTemplates() {
+  const BASE = {
+    1:  "Welcome to your pregnancy journey! Stay hydrated, take your prenatal vitamins, and schedule your first antenatal visit as soon as possible.",
+    4:  "By week 4, the embryo has implanted in your uterus. You may experience early symptoms like fatigue or mild nausea. Rest well and avoid alcohol and smoking.",
+    8:  "Your baby is about the size of a kidney bean! Major organs are forming. Continue taking folic acid and report any heavy bleeding to your doctor immediately.",
+    12: "You've reached the end of your first trimester — congratulations! Your baby is now developing facial features. The risk of miscarriage drops significantly after this week.",
+    16: "Your baby can now make sucking motions and may start to hear sounds. You might feel the first flutters of movement soon. Attend your mid-pregnancy scan.",
+    20: "Halfway there! Your baby is about 25 cm long. This is typically when you'll have your anatomy scan. Keep up your iron intake to prevent anaemia.",
+    24: "Your baby's lungs are developing rapidly. Now is a good time to start thinking about birth plans and antenatal classes.",
+    28: "You've entered the third trimester. Watch for signs of preeclampsia such as severe headaches or swelling in your hands and face.",
+    32: "Your baby is gaining weight quickly and preparing for birth. Practice your breathing exercises.",
+    36: "Your baby is nearly full-term. Pack your hospital bag and make sure your support person is ready.",
+    40: "Your due date has arrived! Contact your healthcare provider if you experience strong contractions, water breaking, or reduced fetal movement.",
+  };
+  return Array.from({ length: 40 }, (_, i) => {
+    const w = i + 1;
+    return {
+      week:    w,
+      message: BASE[w] || `Week ${w} — Please add the health guidance message for this week.`,
+      ytLink:  "",
+    };
+  });
+}
+
+// ─── Read / write helpers ─────────────────────────────────────────────────────
+function readMsgTemplatesWorkbook() {
+  if (!fs.existsSync(MSG_TEMPLATES_FILE)) return null;
+  return XLSX.readFile(MSG_TEMPLATES_FILE);
+}
+
+function parseMsgPregnancy(wb) {
+  const ws = wb?.Sheets[SH_MSG_PREGNANCY];
+  if (!ws) return defaultPregnancyTemplates();
+  const rows  = XLSX.utils.sheet_to_json(ws, { defval: "" });
+  const map   = {};
+  rows.forEach((row) => {
+    const w = Number(row["Week"]);
+    if (w >= 1 && w <= 40) {
+      map[w] = { message: String(row["Message"] ?? ""), ytLink: String(row["YT Link"] ?? "") };
+    }
+  });
+  return Array.from({ length: 40 }, (_, i) => {
+    const w = i + 1;
+    return {
+      week:    w,
+      message: map[w]?.message ?? `Week ${w} — Please add the health guidance message for this week.`,
+      ytLink:  map[w]?.ytLink  ?? "",
+    };
+  });
+}
+
+function parseMsgOther(wb) {
+  const ws = wb?.Sheets[SH_MSG_OTHER];
+  if (!ws) return [];
+  return XLSX.utils.sheet_to_json(ws, { defval: "" }).map((row) => ({
+    condition: String(row["Condition"] ?? ""),
+    message:   String(row["Message"]   ?? ""),
+    ytLink:    String(row["YT Link"]   ?? ""),
+  }));
+}
+
+function parseMsgAppointments(wb) {
+  const ws = wb?.Sheets[SH_MSG_APPOINTMENTS];
+  if (!ws) return [];
+  return XLSX.utils.sheet_to_json(ws, { defval: "" }).map((row) => ({
+    type:    String(row["Type"]    ?? ""),
+    message: String(row["Message"] ?? ""),
+    ytLink:  String(row["YT Link"] ?? ""),
+  }));
+}
+
+function buildMsgTemplatesWorkbook(pregnancy, other, appointments) {
+  const wb = XLSX.utils.book_new();
+
+  // Pregnancy sheet
+  const pregRows = pregnancy.map((t) => ({
+    "Week":    t.week,
+    "Message": t.message,
+    "YT Link": t.ytLink || "",
+  }));
+  const wsP = XLSX.utils.json_to_sheet(pregRows);
+  wsP["!cols"] = [{ wch: 6 }, { wch: 80 }, { wch: 50 }];
+  XLSX.utils.book_append_sheet(wb, wsP, SH_MSG_PREGNANCY);
+
+  // Other Conditions sheet
+  const otherRows = (other || []).map((t) => ({
+    "Condition": t.condition,
+    "Message":   t.message,
+    "YT Link":   t.ytLink || "",
+  }));
+  const wsO = XLSX.utils.json_to_sheet(otherRows.length > 0 ? otherRows : [{ "Condition": "", "Message": "", "YT Link": "" }]);
+  wsO["!cols"] = [{ wch: 20 }, { wch: 80 }, { wch: 50 }];
+  XLSX.utils.book_append_sheet(wb, wsO, SH_MSG_OTHER);
+
+  // Appointments sheet
+  const apptRows = (appointments || []).map((t) => ({
+    "Type":    t.type,
+    "Message": t.message,
+    "YT Link": t.ytLink || "",
+  }));
+  const wsA = XLSX.utils.json_to_sheet(apptRows.length > 0 ? apptRows : [{ "Type": "", "Message": "", "YT Link": "" }]);
+  wsA["!cols"] = [{ wch: 20 }, { wch: 80 }, { wch: 50 }];
+  XLSX.utils.book_append_sheet(wb, wsA, SH_MSG_APPOINTMENTS);
+
+  return wb;
+}
+
+function saveMsgTemplates(pregnancy, other, appointments) {
+  const wb = buildMsgTemplatesWorkbook(pregnancy, other, appointments);
+  XLSX.writeFile(wb, MSG_TEMPLATES_FILE);
+}
+
+// ─── Routes ───────────────────────────────────────────────────────────────────
+
+// GET all message templates
+app.get("/api/message-templates", (req, res) => {
+  try {
+    const wb          = readMsgTemplatesWorkbook();
+    const pregnancy   = parseMsgPregnancy(wb);
+    const other       = wb ? parseMsgOther(wb)        : [];
+    const appointments = wb ? parseMsgAppointments(wb) : [];
+    res.json({ ok: true, pregnancy, other, appointments });
+  } catch (err) {
+    console.error("GET /api/message-templates:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST save pregnancy templates
+app.post("/api/message-templates/pregnancy", (req, res) => {
+  try {
+    const { pregnancy } = req.body;
+    if (!Array.isArray(pregnancy)) return res.status(400).json({ error: "pregnancy must be an array" });
+    const wb    = readMsgTemplatesWorkbook();
+    const other = wb ? parseMsgOther(wb) : [];
+    const appts = wb ? parseMsgAppointments(wb) : [];
+    saveMsgTemplates(pregnancy, other, appts);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("POST /api/message-templates/pregnancy:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST save other conditions templates
+app.post("/api/message-templates/other", (req, res) => {
+  try {
+    const { other } = req.body;
+    const wb       = readMsgTemplatesWorkbook();
+    const pregnancy = wb ? parseMsgPregnancy(wb)    : defaultPregnancyTemplates();
+    const appts     = wb ? parseMsgAppointments(wb)  : [];
+    saveMsgTemplates(pregnancy, other || [], appts);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("POST /api/message-templates/other:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST save appointments templates
+app.post("/api/message-templates/appointments", (req, res) => {
+  try {
+    const { appointments } = req.body;
+    const wb        = readMsgTemplatesWorkbook();
+    const pregnancy  = wb ? parseMsgPregnancy(wb) : defaultPregnancyTemplates();
+    const other      = wb ? parseMsgOther(wb)     : [];
+    saveMsgTemplates(pregnancy, other, appointments || []);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("POST /api/message-templates/appointments:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
