@@ -1,6 +1,8 @@
 // src/pages/communications/AppointmentComms.jsx
+import { useNavigate } from "react-router-dom";
 import { CalendarDays } from "lucide-react";
 export default function AppointmentComms() {
+  
   return (
     <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-16
                     flex flex-col items-center justify-center text-center">

@@ -1,0 +1,233 @@
+import React, { useState, useEffect } from "react";
+import { Calendar, dateFnsLocalizer } from "react-big-calendar";
+import { format, parse, startOfWeek, getDay } from "date-fns";
+import { enUS } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
+import { Calendar as CalendarIcon, Clock, Users, Coffee, Gift, Plus, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+
+const locales = {
+  "en-US": enUS,
+};
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek,
+  getDay,
+  locales,
+});
+
+const EVENT_COLORS = {
+  "Hospital Event": "#22c55e", // green
+  "Birthday": "#f472b6", // pink
+  "Meeting": "#3b82f6", // blue
+  "Leave / Holiday": "#ef4444", // red
+  "Reminder": "#f97316", // orange
+  "Other": "#64748b", // gray
+};
+
+function StatCard({ label, value, Icon, colorClass }) {
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-4">
+      <div className={`p-3 rounded-xl ${colorClass}`}>
+        <Icon size={24} />
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-slate-500">{label}</p>
+        <p className="text-2xl font-bold text-slate-800">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+export default function CalendarPage() {
+  const navigate = useNavigate();
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("All");
+  const [view, setView] = useState("month");
+  const [date, setDate] = useState(new Date());
+  
+  const fetchEvents = async () => {
+    try {
+      const res = await fetch("/calendar-api");
+      const data = await res.json();
+      
+      const formattedEvents = data.map(e => {
+        let start, end;
+        if (e.allDay || (!e.startTime && !e.endTime)) {
+          start = new Date(e.startDate + "T00:00:00");
+          end = new Date(e.endDate ? e.endDate + "T23:59:59" : e.startDate + "T23:59:59");
+        } else {
+          start = new Date(e.startDate + "T" + (e.startTime || "00:00"));
+          end = new Date((e.endDate || e.startDate) + "T" + (e.endTime || "23:59"));
+        }
+        
+        return {
+          ...e,
+          start,
+          end,
+          title: e.type === "Birthday" ? `🎂 ${e.title}` : e.title,
+        };
+      });
+      setEvents(formattedEvents);
+    } catch (error) {
+      console.error("Failed to fetch events", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const eventStyleGetter = (event) => {
+    const backgroundColor = EVENT_COLORS[event.type] || EVENT_COLORS["Other"];
+    return {
+      style: {
+        backgroundColor,
+        borderRadius: "4px",
+        opacity: 0.9,
+        color: "white",
+        border: "0px",
+        display: "block",
+        padding: "2px 4px",
+        fontSize: "12px",
+        fontWeight: "500",
+      }
+    };
+  };
+
+  const handleSelectSlot = ({ start }) => {
+    if (view === "month") {
+      setDate(start);
+      setView("day");
+    } else {
+      navigate(`/calendar/add?date=${format(start, "yyyy-MM-dd")}&time=${format(start, "HH:mm")}`);
+    }
+  };
+
+  const handleSelectEvent = (event) => {
+    navigate(`/calendar/${event.id}/edit`);
+  };
+  
+  // Calculate Stats
+  const today = new Date();
+  const todayStr = format(today, "yyyy-MM-dd");
+  
+  const activeEvents = events.filter(e => e.status === "Active");
+  const eventsToday = activeEvents.filter(e => e.startDate <= todayStr && (!e.endDate || e.endDate >= todayStr)).length;
+  
+  const thisMonth = today.getMonth();
+  const thisYear = today.getFullYear();
+  const birthdaysThisMonth = activeEvents.filter(e => e.type === "Birthday" && new Date(e.startDate).getMonth() === thisMonth).length;
+  const meetingsThisMonth = activeEvents.filter(e => e.type === "Meeting" && new Date(e.startDate).getMonth() === thisMonth).length;
+  const leavesThisMonth = activeEvents.filter(e => e.type === "Leave / Holiday" && new Date(e.startDate).getMonth() === thisMonth).length;
+
+  const filteredEvents = activeEvents.filter(e => {
+    if (filterType !== "All" && e.type !== filterType) return false;
+    if (searchTerm && !e.title.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    return true;
+  });
+
+  const CustomToolbar = (toolbar) => {
+    const goToBack = () => toolbar.onNavigate('PREV');
+    const goToNext = () => toolbar.onNavigate('NEXT');
+    const goToCurrent = () => toolbar.onNavigate('TODAY');
+
+    return (
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <button onClick={goToBack} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition"><ChevronLeft size={20} /></button>
+          <button onClick={goToCurrent} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition">Today</button>
+          <button onClick={goToNext} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition"><ChevronRight size={20} /></button>
+          <span className="ml-4 text-xl font-bold text-slate-800">{toolbar.label}</span>
+        </div>
+        <div className="flex bg-slate-100 p-1 rounded-xl">
+          <button onClick={() => toolbar.onView('month')} className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${toolbar.view === 'month' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>Month</button>
+          <button onClick={() => toolbar.onView('day')} className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${toolbar.view === 'day' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>Day</button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-6 pb-12">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Calendar</h1>
+          <p className="text-sm text-slate-500 mt-1">Manage hospital events, meetings, and schedules</p>
+        </div>
+        <button onClick={() => navigate("/calendar/add")} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm transition-colors">
+          <Plus size={18} /> Add Event
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard label="Events Today" value={eventsToday} Icon={Clock} colorClass="bg-amber-100 text-amber-700" />
+        <StatCard label="Birthdays This Month" value={birthdaysThisMonth} Icon={Gift} colorClass="bg-pink-100 text-pink-700" />
+        <StatCard label="Meetings This Month" value={meetingsThisMonth} Icon={Users} colorClass="bg-blue-100 text-blue-700" />
+        <StatCard label="Leaves This Month" value={leavesThisMonth} Icon={Coffee} colorClass="bg-red-100 text-red-700" />
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="Search events..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div className="w-full md:w-64 relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <select 
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
+            >
+              <option value="All">All Types</option>
+              <option value="Hospital Event">Hospital Event</option>
+              <option value="Birthday">Birthday</option>
+              <option value="Meeting">Meeting</option>
+              <option value="Leave / Holiday">Leave / Holiday</option>
+              <option value="Reminder">Reminder</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="h-[700px]">
+          <Calendar
+            localizer={localizer}
+            events={filteredEvents}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: "100%", fontFamily: "inherit" }}
+            eventPropGetter={eventStyleGetter}
+            onSelectSlot={handleSelectSlot}
+            onSelectEvent={handleSelectEvent}
+            selectable
+            popup
+            view={view}
+            onView={setView}
+            date={date}
+            onNavigate={setDate}
+            views={["month", "day"]}
+            step={60}
+            timeslots={1}
+            components={{
+              toolbar: CustomToolbar
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}

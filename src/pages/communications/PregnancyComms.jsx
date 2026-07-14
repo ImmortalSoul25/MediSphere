@@ -4,6 +4,7 @@
 // Lets you select one / many / all and "send" weekly WhatsApp messages.
 // Send flow: idle → sending (pause / stop controls) → done.
 
+import { useNavigate } from "react-router-dom";
 import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Send, Pause, Play, Square, CheckCircle2, X,
@@ -82,7 +83,7 @@ function SentBadge({ sent }) {
 
 // ─── View Details mini-modal ──────────────────────────────────────────────────
 function ViewModal({ patient, onClose }) {
-  const week = calcCurrentWeek(patient.dueDate);
+  const week = calcCurrentWeek(patient.expected_due_date);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
@@ -98,7 +99,7 @@ function ViewModal({ patient, onClose }) {
         <div className="px-5 py-4 space-y-2.5 text-sm">
           {[
             ["Contact",       patient.contact],
-            ["Due Date",      fmtDate(patient.dueDate)],
+            ["Due Date",      fmtDate(patient.expected_due_date)],
             ["Current Week",  week !== null ? `Week ${week}` : "—"],
             ["Last Wk Sent",  patient.lastWeekSent && patient.lastWeekSent !== "N/A" ? `Week ${patient.lastWeekSent}` : "—"],
             ["Diagnosis",     patient.diagnosis || "—"],
@@ -137,12 +138,18 @@ function SendProgressBar({ done, total }) {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function PregnancyComms() {
-  const { patients } = useData();
+  const navigate = useNavigate();
+  const { patients, configConditions } = useData();
 
-  // Filtered to active pregnancy patients only
-  const pregnancyPatients = useMemo(() =>
-    (patients || []).filter((p) => p.active && p.condition === "Pregnancy"),
-  [patients]);
+  const pregnancyPatients = useMemo(() => {
+    return (patients || []).filter((p) => {
+      if (p.is_active === false || p.is_active === "false" || p.receive_msgs === false || p.receive_msgs === "false") return false;
+      return (p.conditions || []).some(code => {
+        const cond = (configConditions || []).find(c => c.code === code);
+        return cond && cond.name.toLowerCase().includes("pregnancy");
+      });
+    });
+  }, [patients, configConditions]);
 
   // ── Sort ────────────────────────────────────────────────────────────────────
   const [sortKey, setSortKey] = useState("name");
@@ -158,14 +165,14 @@ export default function PregnancyComms() {
       let av, bv;
       if (sortKey === "name")    { av = a.name.toLowerCase();    bv = b.name.toLowerCase(); }
       if (sortKey === "id")      { av = parseInt(a.id, 10) || 0; bv = parseInt(b.id, 10) || 0; }
-      if (sortKey === "dueDate") {
-        av = a.dueDate ? new Date(a.dueDate) : new Date(0);
-        bv = b.dueDate ? new Date(b.dueDate) : new Date(0);
+      if (sortKey === "expected_due_date") {
+        av = a.expected_due_date ? new Date(a.expected_due_date) : new Date(0);
+        bv = b.expected_due_date ? new Date(b.expected_due_date) : new Date(0);
         return sortDir === "asc" ? av - bv : bv - av;
       }
       if (sortKey === "week") {
-        av = calcCurrentWeek(a.dueDate) ?? -1;
-        bv = calcCurrentWeek(b.dueDate) ?? -1;
+        av = calcCurrentWeek(a.expected_due_date) ?? -1;
+        bv = calcCurrentWeek(b.expected_due_date) ?? -1;
       }
       if (av < bv) return sortDir === "asc" ? -1 :  1;
       if (av > bv) return sortDir === "asc" ?  1 : -1;
@@ -178,6 +185,7 @@ export default function PregnancyComms() {
 
   // Keep selection valid if patient list changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelected((prev) => {
       const validIds = new Set(sorted.map((p) => p.id));
       const next     = new Set([...prev].filter((id) => validIds.has(id)));
@@ -194,6 +202,7 @@ export default function PregnancyComms() {
   };
 
   const toggleOne = (id) => {
+     
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -217,7 +226,7 @@ export default function PregnancyComms() {
   const [viewPatient, setViewPatient] = useState(null);
 
   // ── Send logic (simulated) ──────────────────────────────────────────────────
-  const startSending = () => {
+  const startSending = async () => {
     const ids    = [...selected];
     const total  = ids.length;
 
@@ -227,35 +236,37 @@ export default function PregnancyComms() {
     pausedRef.current  = false;
     stoppedRef.current = false;
 
-    let idx = 0;
+    if (total === 0) {
+      setSendState("done");
+      return;
+    }
 
-    const tick = () => {
-      if (stoppedRef.current) {
-        setSendState("idle");
-        setProgress({ done: 0, total: 0 });
-        return;
+    try {
+      const res = await fetch("/whatsapp/send-pregnancy-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patient_ids: ids })
+      });
+      const data = await res.json();
+      const results = data.results || {};
+      
+      const newMap = {};
+      for (const id of ids) {
+        newMap[id] = results[id] === "Sent" ? true : "failed";
       }
-      if (pausedRef.current) {
-        intervalRef.current = setTimeout(tick, 300);
-        return;
+      setSentMap(newMap);
+      setProgress({ done: total, total });
+    } catch (e) {
+      console.error("Error sending messages:", e);
+      const newMap = {};
+      for (const id of ids) {
+        newMap[id] = "failed";
       }
-      if (idx >= ids.length) {
-        setSendState("done");
-        return;
-      }
+      setSentMap(newMap);
+      setProgress({ done: total, total });
+    }
 
-      const id = ids[idx];
-      idx++;
-
-      // Simulate 90% success, 10% fail
-      const success = Math.random() > 0.1;
-      setSentMap((prev) => ({ ...prev, [id]: success ? true : "failed" }));
-      setProgress((prev) => ({ ...prev, done: prev.done + 1 }));
-
-      intervalRef.current = setTimeout(tick, 600); // ~600ms per message
-    };
-
-    intervalRef.current = setTimeout(tick, 300);
+    setSendState("done");
   };
 
   const handlePause = () => {
@@ -318,7 +329,7 @@ export default function PregnancyComms() {
           </span>
           <SortButton sortKey="name"    currentKey={sortKey} sortDir={sortDir} label="Name"     onClick={handleSort} />
           <SortButton sortKey="id"      currentKey={sortKey} sortDir={sortDir} label="ID"        onClick={handleSort} />
-          <SortButton sortKey="dueDate" currentKey={sortKey} sortDir={sortDir} label="Due Date"  onClick={handleSort} />
+          <SortButton sortKey="expected_due_date" currentKey={sortKey} sortDir={sortDir} label="Due Date"  onClick={handleSort} />
           <SortButton sortKey="week"    currentKey={sortKey} sortDir={sortDir} label="Curr Week" onClick={handleSort} />
         </div>
       </div>
@@ -353,7 +364,7 @@ export default function PregnancyComms() {
               {sorted.length > 0 ? (
                 sorted.map((p) => {
                   const isSelected = selected.has(p.id);
-                  const week       = calcCurrentWeek(p.dueDate);
+                  const week       = calcCurrentWeek(p.expected_due_date);
                   const sentStatus = sentMap[p.id] ?? null;
                   const isSendingThis = isSending && selected.has(p.id) && sentStatus === null;
 
@@ -379,7 +390,7 @@ export default function PregnancyComms() {
                       <td className="px-4 py-3.5 font-mono text-slate-500 text-xs">{p.id}</td>
                       <td className="px-4 py-3.5 font-medium text-slate-800">{p.name}</td>
                       <td className="px-4 py-3.5 text-slate-600">{p.contact}</td>
-                      <td className="px-4 py-3.5 text-slate-600">{fmtDate(p.dueDate)}</td>
+                      <td className="px-4 py-3.5 text-slate-600">{fmtDate(p.expected_due_date)}</td>
                       <td className="px-4 py-3.5"><WeekBadge week={week} /></td>
                       <td className="px-4 py-3.5 text-slate-500 text-xs">
                         {p.lastWeekSent && p.lastWeekSent !== "N/A"
@@ -395,7 +406,7 @@ export default function PregnancyComms() {
                       {/* View details */}
                       <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                         <button
-                          onClick={() => setViewPatient(p)}
+                          onClick={() => navigate('/patients/' + p.id)}
                           className="flex items-center gap-1.5 text-xs font-semibold
                                      text-indigo-600 hover:bg-indigo-50 px-2.5 py-1.5
                                      rounded-lg transition-colors">

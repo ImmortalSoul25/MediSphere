@@ -1,6 +1,8 @@
 // src/pages/communications/OtherConditionsComms.jsx
+import { useNavigate } from "react-router-dom";
 import { Stethoscope } from "lucide-react";
 export default function OtherConditionsComms() {
+  
   return (
     <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-16
                     flex flex-col items-center justify-center text-center">

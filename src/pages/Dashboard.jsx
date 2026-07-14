@@ -1,8 +1,8 @@
-// src/pages/Dashboard.jsx
-
-import { Users, UserCheck, CalendarDays, CalendarClock, ClockAlert } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Users, UserCheck, CalendarDays, CalendarClock, ClockAlert, ShieldCheck, FileText, AlertCircle, Calendar as CalendarIcon, Clock, Gift, Activity } from "lucide-react";
 import { useData }         from "../context/DataContext";
 import { useAppointments } from "../context/AppointmentsContext";
+import { useNavigate } from "react-router-dom";
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({ label, value, icon: Icon, accent, loading }) {
@@ -12,6 +12,9 @@ function StatCard({ label, value, icon: Icon, accent, loading }) {
     indigo: { bg: "bg-indigo-50", icon: "text-indigo-600" },
     violet: { bg: "bg-violet-50", icon: "text-violet-600" },
     amber:  { bg: "bg-amber-50",  icon: "text-amber-500"  },
+    blue:   { bg: "bg-blue-50",   icon: "text-blue-600"   },
+    rose:   { bg: "bg-rose-50",   icon: "text-rose-600"   },
+    pink:   { bg: "bg-pink-50",   icon: "text-pink-600"   },
   };
   const { bg, icon: iconColor } = accentMap[accent] || accentMap.teal;
 
@@ -46,28 +49,73 @@ function isSameDay(dateStr, target) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { patients, loading: pLoading }   = useData();
   const { scheduled, requests, loading: aLoading } = useAppointments();
+  
+  const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
 
-  const loading = pLoading || aLoading;
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch("/calendar-api");
+        const data = await res.json();
+        setEvents(data);
+      } catch (err) {
+        console.error("Failed to fetch events", err);
+      } finally {
+        setEventsLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  const loading = pLoading || aLoading || eventsLoading;
 
   const today    = new Date();
+  const todayStr = today.toISOString().split("T")[0];
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
+  
+  const thisMonth = today.getMonth();
 
   const totalPatients   = patients?.length ?? 0;
-  const activePatients  = patients?.filter((p) => p.active).length ?? 0;
+  const activePatients = patients?.filter((p) => p.is_active).length ?? 0;
   const apptToday       = scheduled?.filter((a) => isSameDay(a.appointmentDate, today)).length    ?? 0;
   const apptTomorrow    = scheduled?.filter((a) => isSameDay(a.appointmentDate, tomorrow)).length ?? 0;
   const pendingRequests = requests?.length ?? 0;
 
+  const abhaLinked      = patients?.filter((p) => p.abhaLinked).length ?? 0;
+  
+  // Calendar Stats
+  const activeEvents = events.filter(e => e.status === "Active");
+  const eventsTodayCount = activeEvents.filter(e => e.startDate <= todayStr && (!e.endDate || e.endDate >= todayStr)).length;
+  
+  const next7Days = new Date(today);
+  next7Days.setDate(today.getDate() + 7);
+  const next7DaysStr = next7Days.toISOString().split("T")[0];
+  const upcomingThisWeek = activeEvents.filter(e => e.startDate > todayStr && e.startDate <= next7DaysStr).length;
+  
+  const birthdaysThisMonth = activeEvents.filter(e => e.type === "Birthday" && new Date(e.startDate).getMonth() === thisMonth).length;
+
   const stats = [
-    { label: "Total Patients",               value: totalPatients,   icon: Users,         accent: "teal"   },
-    { label: "Total Active Patients",        value: activePatients,  icon: UserCheck,     accent: "green"  },
-    { label: "Appointments Today",           value: apptToday,       icon: CalendarDays,  accent: "indigo" },
-    { label: "Appointments Tomorrow",        value: apptTomorrow,    icon: CalendarClock, accent: "violet" },
-    { label: "Appointment Requests Pending", value: pendingRequests, icon: ClockAlert,    accent: "amber"  },
+    { label: "Total Patients",               value: totalPatients,      icon: Users,         accent: "teal"   },
+    { label: "Total Active Patients",        value: activePatients,     icon: UserCheck,     accent: "green"  },
+    { label: "Appointments Today",           value: apptToday,          icon: CalendarDays,  accent: "indigo" },
+    { label: "Appointments Tomorrow",        value: apptTomorrow,       icon: CalendarClock, accent: "violet" },
+    { label: "Appointment Requests Pending", value: pendingRequests,    icon: ClockAlert,    accent: "amber"  },
+    { label: "ABHA Linked Patients",         value: abhaLinked,         icon: ShieldCheck,   accent: "blue"   },
+    { label: "Events Today",                 value: eventsTodayCount,   icon: Clock,         accent: "amber"  },
+    { label: "Upcoming This Week",           value: upcomingThisWeek,   icon: CalendarIcon,  accent: "indigo" },
+    { label: "Birthdays This Month",         value: birthdaysThisMonth, icon: Gift,          accent: "pink"   },
   ];
+
+  // Upcoming 5 events sorted by start date
+  const upcomingEvents = activeEvents
+    .filter(e => e.startDate >= todayStr)
+    .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+    .slice(0, 5);
 
   return (
     <div>
@@ -82,6 +130,46 @@ export default function Dashboard() {
         {stats.map((s) => (
           <StatCard key={s.label} {...s} loading={loading} />
         ))}
+      </div>
+
+      <div className="mt-8">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CalendarIcon size={20} className="text-indigo-600" />
+              <h2 className="font-bold text-slate-800">Upcoming Events</h2>
+            </div>
+            <button onClick={() => navigate("/calendar")} className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition">
+              View Calendar &rarr;
+            </button>
+          </div>
+          <div className="p-0">
+            {eventsLoading ? (
+              <div className="p-6 text-center text-slate-500">Loading events...</div>
+            ) : upcomingEvents.length === 0 ? (
+              <div className="p-6 text-center text-slate-500">No upcoming events.</div>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {upcomingEvents.map(event => (
+                  <li key={event.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-slate-800">
+                        {event.type === "Birthday" ? "🎂 " : ""}{event.title}
+                      </p>
+                      <p className="text-sm text-slate-500 mt-0.5">
+                        {new Date(event.startDate).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}
+                        {!event.allDay && event.startTime && ` • ${event.startTime}`}
+                      </p>
+                    </div>
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700">
+                      {event.type}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       </div>
 
       {!loading && totalPatients === 0 && (

@@ -2,15 +2,13 @@
 // Renamed from Communications.jsx — same content, updated title
 
 import { useState } from "react";
-import { Baby, Stethoscope, CalendarDays } from "lucide-react";
+import { Baby, Stethoscope } from "lucide-react";
 import PregnancyComms       from "./communications/PregnancyComms";
 import OtherConditionsComms from "./communications/OtherConditionsComms";
-import AppointmentComms     from "./communications/AppointmentComms";
 
 const TABS = [
   { key: "pregnancy",    label: "Pregnancy",        Icon: Baby },
-  { key: "other",        label: "Other Conditions", Icon: Stethoscope },
-  { key: "appointments", label: "Appointments",     Icon: CalendarDays },
+  { key: "other",        label: "AMMA", Icon: Stethoscope },
 ];
 
 export default function SendMessages() {
@@ -41,7 +39,6 @@ export default function SendMessages() {
 
       {active === "pregnancy"    && <PregnancyComms />}
       {active === "other"        && <OtherConditionsComms />}
-      {active === "appointments" && <AppointmentComms />}
     </div>
   );
 }
