@@ -1,7 +1,10 @@
 fastapi
-uvicorn[standard]
-gunicorn
+uvicorn
 python-dotenv
 httpx
 motor
-pymongo
+pandas
+openpyxl
+Pillow
+certifi
+dnspython
