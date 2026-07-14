@@ -9,3 +9,4 @@ Pillow
 certifi
 dnspython
 gunicorn
+python-multipart
