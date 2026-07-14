@@ -18,6 +18,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Maternal Portal API", lifespan=lifespan)
 
+@app.get("/")
+def read_root():
+    return {"status": "Backend is running!"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
