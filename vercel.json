@@ -25,38 +25,6 @@
       "destination": "https://medisphere-pxwm.onrender.com/queue-api/:path*"
     },
     {
-      "source": "/field-options/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/field-options/:path*"
-    },
-    {
-      "source": "/config/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/config/:path*"
-    },
-    {
-      "source": "/calendar-api/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/calendar-api/:path*"
-    },
-    {
-      "source": "/scheduled-appointments/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/scheduled-appointments/:path*"
-    },
-    {
-      "source": "/past-appointments/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/past-appointments/:path*"
-    },
-    {
-      "source": "/portal-settings/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/portal-settings/:path*"
-    },
-    {
-      "source": "/backup/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/backup/:path*"
-    },
-    {
-      "source": "/profile-photo/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/profile-photo/:path*"
-    },
-    {
       "source": "/pregnancy/:path*",
       "destination": "https://medisphere-pxwm.onrender.com/pregnancy/:path*"
     },
@@ -65,16 +33,8 @@
       "destination": "https://medisphere-pxwm.onrender.com/appointments/:path*"
     },
     {
-      "source": "/md/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/md/:path*"
-    },
-    {
-      "source": "/conditions/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/conditions/:path*"
-    },
-    {
-      "source": "/medical-history/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/medical-history/:path*"
+      "source": "/:path*",
+      "destination": "/index.html"
     }
   ]
 }
