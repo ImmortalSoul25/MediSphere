@@ -1,28 +1,80 @@
 {
   "rewrites": [
-    { "source": "/patient/:match*", "destination": "https://medisphere-pxwm.onrender.com/patient/:match*" },
-    { "source": "/patients/:match*/abha", "destination": "https://medisphere-pxwm.onrender.com/patients/:match*/abha" },
-    { "source": "/templates/:match*", "destination": "https://medisphere-pxwm.onrender.com/templates/:match*" },
-    { "source": "/requests/:match*", "destination": "https://medisphere-pxwm.onrender.com/requests/:match*" },
-    { "source": "/whatsapp/:match*", "destination": "https://medisphere-pxwm.onrender.com/whatsapp/:match*" },
-    { "source": "/queue-api/:match*", "destination": "https://medisphere-pxwm.onrender.com/queue-api/:match*" },
-    { "source": "/field-options/:match*", "destination": "https://medisphere-pxwm.onrender.com/field-options/:match*" },
-    { "source": "/config/:match*", "destination": "https://medisphere-pxwm.onrender.com/config/:match*" },
-    { "source": "/calendar-api/:match*", "destination": "https://medisphere-pxwm.onrender.com/calendar-api/:match*" },
-    { "source": "/scheduled-appointments/:match*", "destination": "https://medisphere-pxwm.onrender.com/scheduled-appointments/:match*" },
-    { "source": "/past-appointments/:match*", "destination": "https://medisphere-pxwm.onrender.com/past-appointments/:match*" },
-    { "source": "/portal-settings/:match*", "destination": "https://medisphere-pxwm.onrender.com/portal-settings/:match*" },
-    { "source": "/backup/:match*", "destination": "https://medisphere-pxwm.onrender.com/backup/:match*" },
-    { "source": "/profile-photo/:match*", "destination": "https://medisphere-pxwm.onrender.com/profile-photo/:match*" },
-    
-    { "source": "/pregnancy/:match*", "destination": "https://medisphere-pxwm.onrender.com/pregnancy/:match*" },
-    { "source": "/appointments/:match*", "destination": "https://medisphere-pxwm.onrender.com/appointments/:match*" },
-    { "source": "/md/:match*", "destination": "https://medisphere-pxwm.onrender.com/md/:match*" },
-    { "source": "/conditions/:match*", "destination": "https://medisphere-pxwm.onrender.com/conditions/:match*" },
-    { "source": "/medical-history/:match*", "destination": "https://medisphere-pxwm.onrender.com/medical-history/:match*" }
-  ],
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/.*", "dest": "/index.html" }
+    {
+      "source": "/patient/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/patient/:path*"
+    },
+    {
+      "source": "/patients/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/patients/:path*"
+    },
+    {
+      "source": "/templates/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/templates/:path*"
+    },
+    {
+      "source": "/requests/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/requests/:path*"
+    },
+    {
+      "source": "/whatsapp/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/whatsapp/:path*"
+    },
+    {
+      "source": "/queue-api/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/queue-api/:path*"
+    },
+    {
+      "source": "/field-options/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/field-options/:path*"
+    },
+    {
+      "source": "/config/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/config/:path*"
+    },
+    {
+      "source": "/calendar-api/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/calendar-api/:path*"
+    },
+    {
+      "source": "/scheduled-appointments/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/scheduled-appointments/:path*"
+    },
+    {
+      "source": "/past-appointments/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/past-appointments/:path*"
+    },
+    {
+      "source": "/portal-settings/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/portal-settings/:path*"
+    },
+    {
+      "source": "/backup/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/backup/:path*"
+    },
+    {
+      "source": "/profile-photo/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/profile-photo/:path*"
+    },
+    {
+      "source": "/pregnancy/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/pregnancy/:path*"
+    },
+    {
+      "source": "/appointments/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/appointments/:path*"
+    },
+    {
+      "source": "/md/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/md/:path*"
+    },
+    {
+      "source": "/conditions/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/conditions/:path*"
+    },
+    {
+      "source": "/medical-history/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/medical-history/:path*"
+    }
   ]
 }
