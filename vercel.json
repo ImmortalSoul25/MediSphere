@@ -9,29 +9,54 @@
       "destination": "https://medisphere-pxwm.onrender.com/patients/:path*"
     },
     {
-      "source": "/templates/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/templates/:path*"
-    },
-    {
       "source": "/requests/:path*",
       "destination": "https://medisphere-pxwm.onrender.com/requests/:path*"
+    },
+    {
+      "source": "/scheduled-appointments/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/scheduled-appointments/:path*"
+    },
+    {
+      "source": "/past-appointments/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/past-appointments/:path*"
+    },
+    {
+      "source": "/appointments/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/appointments/:path*"
+    },
+    {
+      "source": "/calendar-api/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/calendar-api/:path*"
+    },
+    {
+      "source": "/templates/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/templates/:path*"
     },
     {
       "source": "/whatsapp/:path*",
       "destination": "https://medisphere-pxwm.onrender.com/whatsapp/:path*"
     },
     {
+      "source": "/portal-settings/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/portal-settings/:path*"
+    },
+    {
+      "source": "/config/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/config/:path*"
+    },
+    {
       "source": "/queue-api/:path*",
       "destination": "https://medisphere-pxwm.onrender.com/queue-api/:path*"
     },
     {
-      "source": "/pregnancy/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/pregnancy/:path*"
+      "source": "/field-options/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/field-options/:path*"
     },
     {
-      "source": "/appointments/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/appointments/:path*"
+      "source": "/backup/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/backup/:path*"
     },
+
     {
       "source": "/:path*",
       "destination": "/index.html"
