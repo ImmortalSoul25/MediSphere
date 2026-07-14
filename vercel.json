@@ -13,7 +13,13 @@
     { "source": "/past-appointments/:match*", "destination": "https://medisphere-pxwm.onrender.com/past-appointments/:match*" },
     { "source": "/portal-settings/:match*", "destination": "https://medisphere-pxwm.onrender.com/portal-settings/:match*" },
     { "source": "/backup/:match*", "destination": "https://medisphere-pxwm.onrender.com/backup/:match*" },
-    { "source": "/profile-photo/:match*", "destination": "https://medisphere-pxwm.onrender.com/profile-photo/:match*" }
+    { "source": "/profile-photo/:match*", "destination": "https://medisphere-pxwm.onrender.com/profile-photo/:match*" },
+    
+    { "source": "/pregnancy/:match*", "destination": "https://medisphere-pxwm.onrender.com/pregnancy/:match*" },
+    { "source": "/appointments/:match*", "destination": "https://medisphere-pxwm.onrender.com/appointments/:match*" },
+    { "source": "/md/:match*", "destination": "https://medisphere-pxwm.onrender.com/md/:match*" },
+    { "source": "/conditions/:match*", "destination": "https://medisphere-pxwm.onrender.com/conditions/:match*" },
+    { "source": "/medical-history/:match*", "destination": "https://medisphere-pxwm.onrender.com/medical-history/:match*" }
   ],
   "routes": [
     { "handle": "filesystem" },
