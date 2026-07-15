@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException, Request, UploadFile, File
-from fastapi.responses import FileResponse
-from profile_photo_service import save_photo, get_photo_path, delete_photo
+from fastapi import APIRouter, HTTPException, Request, UploadFile, File, Response
+from fastapi.responses import JSONResponse
+from profile_photo_service import save_photo, get_photo_bytes, delete_photo
 from database import patients_collection
 from models import PatientMetaData, Patient
 
@@ -116,18 +116,18 @@ async def view_patient_details(patient_id: str):
 
 @router.get("/{patient_id}/photo")
 async def get_patient_photo(patient_id: str):
-    path = get_photo_path(patient_id)
-    return FileResponse(path)
+    photo_bytes = await get_photo_bytes(patient_id)
+    return Response(content=photo_bytes, media_type="image/jpeg")
 
 @router.post("/{patient_id}/photo")
 async def upload_patient_photo(patient_id: str, file: UploadFile = File(...)):
     contents = await file.read()
-    save_path = save_photo(patient_id, contents)
-    return {"message": "Photo uploaded successfully", "path": save_path}
+    await save_photo(patient_id, contents)
+    return {"message": "Photo uploaded successfully", "path": f"/patient/{patient_id}/photo"}
 
 @router.delete("/{patient_id}/photo")
 async def remove_patient_photo(patient_id: str):
-    deleted = delete_photo(patient_id)
+    deleted = await delete_photo(patient_id)
     if deleted:
         return {"message": "Photo deleted"}
     return {"message": "No photo found"}

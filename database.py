@@ -26,6 +26,7 @@ medical_history_config_collection = db["medical_history_config"]
 whatsapp_logs_collection = db["whatsapp_logs"]
 queue_collection = db["queue"]
 field_options_collection = db["field_options"]
+profile_photos_collection = db["profile_photos"]
 
 # ABDM / ABHA Collections
 abha_records_collection = db["abha_records"]

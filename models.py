@@ -88,6 +88,7 @@ class PastAppointment(BaseModel):
     notes: str = ""
     status: str = "Completed"
     completedAt: str = ""
+    wait_time_minutes: int = 0
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  TEMPLATE & CONFIG MODELS

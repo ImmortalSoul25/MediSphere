@@ -51,10 +51,25 @@ async def complete_queue_entry(entry_id: str):
     if entry.get("status") == "Completed":
         return entry
         
-    completed_at = datetime.now().isoformat()
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    now_time = datetime.now().strftime("%I:%M %p")
+    completed_time = datetime.now()
+    completed_at = completed_time.isoformat()
+    today_str = completed_time.strftime("%Y-%m-%d")
+    now_time = completed_time.strftime("%I:%M %p")
     
+    wait_time_minutes = 0
+    if entry.get("addedAt"):
+        try:
+            added_time = datetime.fromisoformat(entry.get("addedAt").replace("Z", "+00:00"))
+            # If the added_time is naive (has no tzinfo), we should make sure completed_time is also naive
+            # or if it's aware, we use aware for both.
+            # Assuming both are naive or both are aware based on how they were generated.
+            # Let's just use a robust calculation:
+            if added_time.tzinfo is not None:
+                completed_time = completed_time.astimezone(added_time.tzinfo)
+            wait_time_minutes = int((completed_time - added_time).total_seconds() / 60)
+        except Exception:
+            pass
+            
     # 1. Update queue entry
     await queue_collection.update_one(
         {"id": entry_id}, 
@@ -88,6 +103,7 @@ async def complete_queue_entry(entry_id: str):
             # Move to past appointments
             scheduled["status"] = "Completed"
             scheduled["completedAt"] = completed_at
+            scheduled["wait_time_minutes"] = wait_time_minutes
             
             # Avoid duplicate _id error
             if "_id" in scheduled:
@@ -109,7 +125,8 @@ async def complete_queue_entry(entry_id: str):
                 "appointmentDate": today_str,
                 "appointmentTime": datetime.now().strftime("%H:%M"),
                 "createdAt": completed_at,
-                "completedAt": completed_at
+                "completedAt": completed_at,
+                "wait_time_minutes": wait_time_minutes
             }
             await past_appointments_collection.insert_one(new_past_appt)
 
