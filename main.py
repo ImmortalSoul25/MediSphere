@@ -22,6 +22,10 @@ app = FastAPI(title="Maternal Portal API", lifespan=lifespan)
 def read_root():
     return {"status": "Backend is running!"}
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
