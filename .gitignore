@@ -27,3 +27,8 @@ __pycache__/
 backup/
 profile_photos/
 conversation_state.json
+
+# Environment variables
+.env
+.env.*
+*.env
