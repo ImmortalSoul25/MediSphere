@@ -128,6 +128,7 @@ class QueueEntry(BaseModel):
     age: str = ""
     contact: str = ""
     conditions: List[str] = Field(default_factory=list)
+    company: Optional[str] = ""
     notes: str = ""
     
     # Meta

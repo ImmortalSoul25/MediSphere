@@ -8,58 +8,7 @@ function inputClass() {
   return "w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500";
 }
 
-function MultiSelectDropdown({ label, options, selected, onChange, disabled }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setOpen(!open)}
-        className={`w-full px-3 py-2 text-sm border rounded-lg text-left flex justify-between items-center transition bg-white
-                   ${disabled ? "bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200" : "border-slate-200 text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500"}
-                   ${open ? "ring-1 ring-indigo-500 border-indigo-500" : ""}`}
-      >
-        <span className="truncate pr-4">
-          {selected.length === 0 ? `Select ${label}...` : `${selected.length} selected`}
-        </span>
-        <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-
-      {open && !disabled && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto py-1">
-            {options.length === 0 ? (
-              <div className="px-4 py-2 text-sm text-slate-400 text-center">No options available</div>
-            ) : (
-              options.map(opt => {
-                const isSelected = selected.includes(opt.value);
-                return (
-                  <label key={opt.value} className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={(e) => {
-                        const newSelected = e.target.checked
-                          ? [...selected, opt.value]
-                          : selected.filter(x => x !== opt.value);
-                        onChange(newSelected);
-                      }}
-                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="flex-1">{opt.label}</span>
-                  </label>
-                );
-              })
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+import MultiSelectDropdown from "../../components/MultiSelectDropdown";
 
 export default function AddQueueModal({ onClose, onAdded }) {
   const [type, setType] = useState("Patient");
@@ -73,6 +22,7 @@ export default function AddQueueModal({ onClose, onAdded }) {
     age: "",
     contact: "",
     conditions: [],
+    company: "",
     notes: ""
   });
   
@@ -347,6 +297,12 @@ export default function AddQueueModal({ onClose, onAdded }) {
                   <label className="block text-xs font-semibold text-slate-500 mb-1.5">Contact Number</label>
                   <input className={inputClass()} value={form.contact} onChange={e => setForm({...form, contact: e.target.value})} />
                 </div>
+                {type === "MR" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1.5">Company Name</label>
+                    <input className={inputClass()} value={form.company} onChange={e => setForm({...form, company: e.target.value})} />
+                  </div>
+                )}
               </>
             )}
             

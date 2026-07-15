@@ -44,58 +44,7 @@ export function Field({ label, required, error, children }) {
   );
 }
 
-export function MultiSelectDropdown({ label, options, selected, onChange, disabled }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setOpen(!open)}
-        className={`w-full px-3 py-2 text-sm border rounded-xl text-left flex justify-between items-center transition bg-white
-                   ${disabled ? "bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200" : "border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"}
-                   ${open ? "ring-2 ring-indigo-400 border-transparent" : ""}`}
-      >
-        <span className="truncate pr-4">
-          {selected.length === 0 ? `Select ${label}...` : `${selected.length} selected`}
-        </span>
-        <div className={`transition-transform ${open ? "rotate-180" : ""}`}>▼</div>
-      </button>
-
-      {open && !disabled && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto py-1">
-            {options.length === 0 ? (
-              <div className="px-4 py-2 text-sm text-slate-400 text-center">No options available</div>
-            ) : (
-              options.map(opt => {
-                const isSelected = selected.includes(opt.value);
-                return (
-                  <label key={opt.value} className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={(e) => {
-                        const newSelected = e.target.checked
-                          ? [...selected, opt.value]
-                          : selected.filter(x => x !== opt.value);
-                        onChange(newSelected);
-                      }}
-                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="flex-1">{opt.label}</span>
-                  </label>
-                );
-              })
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+import MultiSelectDropdown from "../components/MultiSelectDropdown";
 
 export default function PatientFormPage() {
   const { id } = useParams();
@@ -111,9 +60,23 @@ export default function PatientFormPage() {
   const [photoFile, setPhotoFile] = useState(null);
   const [loadingInitial, setLoadingInitial] = useState(isEdit);
 
+  const generateId = async () => {
+    try {
+      const res = await fetch("/patient/generate-id");
+      const data = await res.json();
+      setForm(prev => ({ ...prev, id: data.id }));
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+
   useEffect(() => {
     async function loadPatient() {
-      if (!isEdit) return;
+      if (!isEdit) {
+        generateId();
+        return;
+      }
       setLoadingInitial(true);
       try {
         const p = await fetchPatientDetails(id);
@@ -150,15 +113,7 @@ export default function PatientFormPage() {
     loadPatient();
   }, [id, isEdit, fetchPatientDetails]);
 
-  const generateId = async () => {
-    try {
-      const res = await fetch("/patient/generate-id");
-      const data = await res.json();
-      setForm(prev => ({ ...prev, id: data.id }));
-    } catch(e) {
-      console.error(e);
-    }
-  };
+
 
   const set = (key, val) => {
     setForm((p) => ({ ...p, [key]: val }));
@@ -458,11 +413,8 @@ export default function PatientFormPage() {
             <Field label="Conditions" error={errors.conditions}>
               <MultiSelectDropdown
                 label="Conditions"
-                disabled={!form.gender}
-                options={configConditions
-                  .filter(c => c.gender === "Both" || c.gender === (form.gender === 'F' ? 'Female' : form.gender === 'M' ? 'Male' : ''))
-                  .map(c => ({ label: c.name, value: c.code }))
-                }
+                disabled={false}
+                options={(configConditions || []).map(c => ({ label: c.name, value: c.code }))}
                 selected={form.conditions || []}
                 onChange={(selected) => setForm({ ...form, conditions: selected })}
               />
@@ -471,11 +423,8 @@ export default function PatientFormPage() {
             <Field label="Medical History" error={errors.medical_history}>
               <MultiSelectDropdown
                 label="Medical History"
-                disabled={!form.gender}
-                options={configMedicalHistory
-                  .filter(m => m.gender === "Both" || m.gender === (form.gender === 'F' ? 'Female' : form.gender === 'M' ? 'Male' : ''))
-                  .map(m => ({ label: m.name, value: m.code }))
-                }
+                disabled={false}
+                options={(configMedicalHistory || []).map(m => ({ label: m.name, value: m.name }))}
                 selected={form.medical_history || []}
                 onChange={(selected) => setForm({ ...form, medical_history: selected })}
               />

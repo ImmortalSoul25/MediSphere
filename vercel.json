@@ -5,10 +5,6 @@
       "destination": "https://medisphere-pxwm.onrender.com/patient/:path*"
     },
     {
-      "source": "/patients/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/patients/:path*"
-    },
-    {
       "source": "/requests/:path*",
       "destination": "https://medisphere-pxwm.onrender.com/requests/:path*"
     },
@@ -19,10 +15,6 @@
     {
       "source": "/past-appointments/:path*",
       "destination": "https://medisphere-pxwm.onrender.com/past-appointments/:path*"
-    },
-    {
-      "source": "/appointments/:path*",
-      "destination": "https://medisphere-pxwm.onrender.com/appointments/:path*"
     },
     {
       "source": "/calendar-api/:path*",

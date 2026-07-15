@@ -244,6 +244,7 @@ export default function Queue() {
                       <th className="px-4 py-3 font-semibold">Name</th>
                       <th className="px-4 py-3 font-semibold">Type</th>
                       <th className="px-4 py-3 font-semibold">Conditions</th>
+                      <th className="px-4 py-3 font-semibold">Company</th>
                       <th className="px-4 py-3 font-semibold">Wait Time</th>
                       <th className="px-4 py-3 font-semibold text-right">Actions</th>
                     </tr>
@@ -271,11 +272,18 @@ export default function Queue() {
                               {q.type === "Other" && <span className="px-2.5 py-1 bg-slate-100 text-slate-700 font-semibold text-[11px] rounded-md">OTHER</span>}
                             </td>
                             <td className="px-4 py-4">
-                              {q.conditions && q.conditions.length > 0 ? (
-                                <div className="flex gap-1 flex-wrap">
-                                  {q.conditions.map((c, i) => <span key={i} className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-mono">{c}</span>)}
-                                </div>
-                              ) : <span className="text-xs text-slate-400">{q.notes || "-"}</span>}
+                              {q.type === "Patient" ? (
+                                q.conditions && q.conditions.length > 0 ? (
+                                  <div className="flex gap-1 flex-wrap">
+                                    {q.conditions.map((c, i) => <span key={i} className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-mono">{c}</span>)}
+                                  </div>
+                                ) : <span className="text-xs text-slate-400">{q.notes || "-"}</span>
+                              ) : <span className="text-xs text-slate-400">-</span>}
+                            </td>
+                            <td className="px-4 py-4">
+                              {q.type === "MR" ? (
+                                <div className="font-medium text-slate-700">{q.company || "-"}</div>
+                              ) : <span className="text-xs text-slate-400">-</span>}
                             </td>
                             <td className="px-4 py-4 font-semibold text-amber-600">{getWaitTimeStr(q.addedAt)}</td>
                             <td className="px-4 py-4">

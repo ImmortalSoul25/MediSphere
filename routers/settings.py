@@ -22,3 +22,45 @@ async def get_conditions():
 async def get_medical_history():
     docs = await medical_history_config_collection.find({}, {"_id": 0}).to_list(length=None)
     return docs
+
+import uuid
+
+@router.post("/config/conditions")
+async def add_condition(req: Request):
+    payload = await req.json()
+    new_doc = {
+        "id": str(uuid.uuid4())[:8].upper(),
+        "name": payload.get("name", "").strip()
+    }
+    if not new_doc["name"]:
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+    await conditions_config_collection.insert_one(new_doc)
+    new_doc.pop("_id", None)
+    return new_doc
+
+@router.delete("/config/conditions/{condition_id}")
+async def delete_condition(condition_id: str):
+    res = await conditions_config_collection.delete_one({"id": condition_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"ok": True}
+
+@router.post("/config/medical-history")
+async def add_medical_history(req: Request):
+    payload = await req.json()
+    new_doc = {
+        "id": str(uuid.uuid4())[:8].upper(),
+        "name": payload.get("name", "").strip()
+    }
+    if not new_doc["name"]:
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+    await medical_history_config_collection.insert_one(new_doc)
+    new_doc.pop("_id", None)
+    return new_doc
+
+@router.delete("/config/medical-history/{history_id}")
+async def delete_medical_history(history_id: str):
+    res = await medical_history_config_collection.delete_one({"id": history_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"ok": True}
