@@ -13,6 +13,10 @@
       "destination": "https://medisphere-pxwm.onrender.com/scheduled-appointments/:path*"
     },
     {
+      "source": "/appointments/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/appointments/:path*"
+    },
+    {
       "source": "/past-appointments/:path*",
       "destination": "https://medisphere-pxwm.onrender.com/past-appointments/:path*"
     },

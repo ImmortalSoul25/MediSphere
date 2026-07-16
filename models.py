@@ -1,6 +1,8 @@
 from __future__ import annotations
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from pydantic import BaseModel, Field
+from datetime import datetime
+import uuid
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  PATIENT MODELS
@@ -78,6 +80,7 @@ class ScheduledAppointment(BaseModel):
     createdAt: str = ""
 
 class PastAppointment(BaseModel):
+    id: str = ""
     appointmentId: str
     patientId: str
     patientName: str
