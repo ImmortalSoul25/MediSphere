@@ -6,6 +6,7 @@ from datetime import datetime
 
 router = APIRouter(prefix="/calendar-api", tags=["Calendar"])
 
+@router.get("")
 @router.get("/")
 async def get_events(
     start: Optional[str] = None, 
@@ -43,6 +44,7 @@ async def get_event(id: str):
     event["id"] = event.pop("_id", None)
     return event
 
+@router.post("")
 @router.post("/")
 async def create_event(event: dict):
     new_event = CalendarEvent(**event)

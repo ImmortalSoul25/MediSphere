@@ -11,12 +11,14 @@ from datetime import datetime
 
 router = APIRouter(prefix="/queue-api", tags=["Queue"])
 
+@router.get("")
 @router.get("/")
 async def get_queue():
     # Return all queue items (scheduler clears it at midnight, so this is today's queue)
     cursor = queue_collection.find({}, {"_id": 0}).sort("sr_no", 1)
     return await cursor.to_list(length=None)
 
+@router.post("")
 @router.post("/")
 async def add_to_queue(req: Request):
     payload = await req.json()
