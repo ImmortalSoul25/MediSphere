@@ -7,7 +7,7 @@ from database import (
 )
 from models import QueueEntry
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/queue-api", tags=["Queue"])
 
@@ -34,7 +34,7 @@ async def add_to_queue(req: Request):
         next_sr_no = last_item["sr_no"] + 1
         
     payload["sr_no"] = next_sr_no
-    payload["addedAt"] = datetime.now().isoformat()
+    payload["addedAt"] = datetime.now(timezone.utc).isoformat()
     payload["status"] = "Waiting"
     
     entry = QueueEntry(**payload)
@@ -53,7 +53,7 @@ async def complete_queue_entry(entry_id: str):
     if entry.get("status") == "Completed":
         return entry
         
-    completed_time = datetime.now()
+    completed_time = datetime.now(timezone.utc)
     completed_at = completed_time.isoformat()
     today_str = completed_time.strftime("%Y-%m-%d")
     now_time = completed_time.strftime("%I:%M %p")
@@ -62,13 +62,11 @@ async def complete_queue_entry(entry_id: str):
     if entry.get("addedAt"):
         try:
             added_time = datetime.fromisoformat(entry.get("addedAt").replace("Z", "+00:00"))
-            # If the added_time is naive (has no tzinfo), we should make sure completed_time is also naive
-            # or if it's aware, we use aware for both.
-            # Assuming both are naive or both are aware based on how they were generated.
-            # Let's just use a robust calculation:
-            if added_time.tzinfo is not None:
-                completed_time = completed_time.astimezone(added_time.tzinfo)
-            wait_time_minutes = int((completed_time - added_time).total_seconds() / 60)
+            if added_time.tzinfo is None:
+                completed_time_calc = completed_time.replace(tzinfo=None)
+            else:
+                completed_time_calc = completed_time
+            wait_time_minutes = int((completed_time_calc - added_time).total_seconds() / 60)
         except Exception:
             pass
             
