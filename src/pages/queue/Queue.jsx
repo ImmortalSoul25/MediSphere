@@ -130,7 +130,7 @@ export default function Queue() {
 
   const fetchQueue = useCallback(async () => {
     try {
-      const res = await fetch("/queue-api/");
+      const res = await fetch("/queue-api");
       if (res.ok) {
         const data = await res.json();
         setQueue(data);

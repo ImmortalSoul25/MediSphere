@@ -163,7 +163,7 @@ export default function AddQueueModal({ onClose, onAdded }) {
     
     try {
       const payload = { ...form, type };
-      await fetch("/queue-api/", {
+      await fetch("/queue-api", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
