@@ -6,6 +6,7 @@ import { useAppointments } from '../context/AppointmentsContext';
 import { PatientForm } from './Patients';
 import AppointmentFormModal from '../components/AppointmentFormModal';
 import PhotoCapture from '../components/PhotoCapture';
+import SecureImage from '../components/SecureImage';
 
 export default function PatientDetails() {
   const { id } = useParams();
@@ -186,11 +187,10 @@ export default function PatientDetails() {
           {/* Profile Photo Card */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col items-center">
             <div className="relative group">
-              <img 
-                src={`/patient/${id}/photo?t=${Date.now()}`}
+              <SecureImage 
+                src={`/patient/${id}/photo?t=${Date.now()}`} 
                 alt={metadata.name} 
                 className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md bg-slate-100 transition-transform duration-300 group-hover:scale-105"
-                onError={(e) => { e.target.src = "/patient/default/photo"; }}
               />
             </div>
             <div className="mt-4 flex gap-2 w-full">

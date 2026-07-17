@@ -5,7 +5,11 @@ import { DataProvider }         from "./context/DataContext";
 import { AppointmentsProvider } from "./context/AppointmentsContext";
 import { TemplatesProvider }    from "./context/TemplatesContext";
 
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./context/ProtectedRoute";
+
 import MainLayout            from "./layouts/MainLayout";
+import Login                 from "./pages/Login";
 import Dashboard             from "./pages/Dashboard";
 import Queue                 from "./pages/queue/Queue";
 import Patients              from "./pages/Patients";
@@ -29,12 +33,22 @@ import AddEventPage          from "./pages/calendar/AddEventPage";
 
 export default function App() {
   return (
-    <DataProvider>
-      <AppointmentsProvider>
-        <TemplatesProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route element={<MainLayout />}>
+    <AuthProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                
+                <Route element={
+                  <ProtectedRoute>
+                    <DataProvider>
+                      <AppointmentsProvider>
+                        <TemplatesProvider>
+                          <MainLayout />
+                        </TemplatesProvider>
+                      </AppointmentsProvider>
+                    </DataProvider>
+                  </ProtectedRoute>
+                }>
                 <Route path="/dashboard"               element={<Dashboard />} />
                 <Route path="/calendar"                element={<CalendarPage />} />
                 <Route path="/calendar/add"            element={<AddEventPage />} />
@@ -57,12 +71,10 @@ export default function App() {
                 <Route path="/templates/pregnancy/:week" element={<PregnancyTemplateDetail />} />
                 <Route path="/templates/appointments/:id" element={<AppointmentTemplateDetail />} />
                 <Route path="/settings"                element={<SettingsPage />} />
-              </Route>
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </TemplatesProvider>
-      </AppointmentsProvider>
-    </DataProvider>
+                </Route>
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </BrowserRouter>
+    </AuthProvider>
   );
 }

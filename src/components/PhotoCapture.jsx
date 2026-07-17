@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Camera, Upload, X, RefreshCw, Check, Image as ImageIcon } from "lucide-react";
+import SecureImage from "./SecureImage";
 
 export default function PhotoCapture({ currentPhotoUrl, onPhotoSelected, onCancel }) {
   const [mode, setMode] = useState("preview"); // preview, upload, camera
@@ -134,11 +135,10 @@ export default function PhotoCapture({ currentPhotoUrl, onPhotoSelected, onCance
       ) : (
         <div className="flex flex-col items-center">
           <div className="relative w-32 h-32 mb-4 group">
-            <img 
+            <SecureImage 
               src={previewUrl} 
               alt="Profile Preview" 
               className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md bg-slate-100"
-              onError={(e) => { e.target.src = "/patient/default/photo"; }}
             />
             {selectedFile && (
               <div className="absolute -top-1 -right-1 bg-emerald-500 text-white p-1 rounded-full border-2 border-white shadow-sm">

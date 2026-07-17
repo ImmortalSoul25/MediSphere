@@ -5,7 +5,8 @@ import asyncio
 from scheduler import run_scheduler
 from contextlib import asynccontextmanager
 
-from routers import patients, appointments, whatsapp, abha, settings, templates, backup, queue, field_options, calendar
+from routers import patients, appointments, whatsapp, abha, settings, templates, backup, queue, field_options, calendar, auth
+from fastapi import Depends
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -38,13 +39,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(patients.router)
-app.include_router(appointments.router)
-app.include_router(whatsapp.router)
-app.include_router(abha.router)
-app.include_router(settings.router)
-app.include_router(templates.router)
-app.include_router(backup.router)
-app.include_router(queue.router)
-app.include_router(field_options.router)
-app.include_router(calendar.router)
+app.include_router(auth.router)
+
+secure_deps = [Depends(auth.get_current_user)]
+
+app.include_router(patients.router, dependencies=secure_deps)
+app.include_router(appointments.router, dependencies=secure_deps)
+app.include_router(whatsapp.router, dependencies=secure_deps)
+app.include_router(abha.router, dependencies=secure_deps)
+app.include_router(settings.router, dependencies=secure_deps)
+app.include_router(templates.router, dependencies=secure_deps)
+app.include_router(backup.router, dependencies=secure_deps)
+app.include_router(queue.router, dependencies=secure_deps)
+app.include_router(field_options.router, dependencies=secure_deps)
+app.include_router(calendar.router, dependencies=secure_deps)

@@ -10,6 +10,7 @@ import AppointmentFormModal from "../components/AppointmentFormModal";
 import PhotoCapture from "../components/PhotoCapture";
 import { useData } from "../context/DataContext";
 import { useAppointments } from "../context/AppointmentsContext";
+import SecureImage from "../components/SecureImage";
 
 
 
@@ -1095,11 +1096,10 @@ export default function Patients() {
                   return (
                     <tr key={p.id} className="hover:bg-slate-50 transition-colors duration-100">
                       <td className="px-3 py-2">
-                        <img 
+                        <SecureImage 
                           src={`/patient/${p.id}/photo?t=${Date.now()}`} 
                           alt={p.name} 
                           className="w-8 h-8 rounded-full object-cover border border-slate-200"
-                          onError={(e) => { e.target.src = "/patient/default/photo"; }}
                         />
                       </td>
                       <td className="px-3 py-3.5 font-mono text-slate-500 text-xs">{p.id}</td>

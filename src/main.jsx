@@ -22,6 +22,52 @@ import ReactDOM from 'react-dom/client'
 // If you forget this line, you get zero styles.
 import './index.css'
 
+// Monkey-patch fetch to automatically add the Authorization header for API calls
+const originalFetch = window.fetch;
+window.fetch = async (input, init) => {
+  let url = input;
+  if (input instanceof Request) {
+    url = input.url;
+  }
+  
+  let urlStr = typeof url === 'string' ? url : (url.url || '');
+  
+  // Add token if it's a relative URL or an absolute URL pointing to the current origin
+  const isLocalApi = urlStr.startsWith('/') || urlStr.startsWith(window.location.origin);
+  
+  if (isLocalApi) {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      init = init || {};
+      
+      // Handle case where init.headers might be a Headers object
+      const newHeaders = new Headers(init.headers || {});
+      newHeaders.set('Authorization', `Bearer ${token}`);
+      
+      init.headers = newHeaders;
+      
+      if (input instanceof Request) {
+        input = new Request(input, init);
+      }
+    }
+  }
+  
+  try {
+    const response = await originalFetch(input, init);
+    if (response.status === 401) {
+      // If we get an unauthorized response, clear the token and redirect to login
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('role');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return response;
+  } catch (err) {
+    throw err;
+  }
+};
+
 import App from './App.jsx'
 
 // document.getElementById('root') finds <div id="root"> in index.html

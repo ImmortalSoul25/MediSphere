@@ -15,6 +15,11 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
+      // Auth / Login API
+      '^/auth/': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
       // Python / FastAPI — patients
       // Regex: matches /patient/ followed by anything, but NOT /patients (the React route)
       '^/patient/': {
