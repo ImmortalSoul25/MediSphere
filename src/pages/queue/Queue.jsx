@@ -43,6 +43,18 @@ function getWaitTimeStr(addedAt, endTime = null) {
   return `${hrs} hr ${remMins} min`;
 }
 
+function getVisitTimeStr(inVisitAt, endTime = null) {
+  if (!inVisitAt) return "-";
+  const end = endTime ? new Date(endTime) : new Date();
+  const ms = end - new Date(inVisitAt);
+  if (ms < 0) return "Just now";
+  const mins = Math.floor(ms / 60000);
+  if (mins < 60) return `${mins} min`;
+  const hrs = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  return `${hrs} hr ${remMins} min`;
+}
+
 function NotesModal({ notes, onClose }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4">
@@ -154,6 +166,7 @@ export default function Queue() {
   }, []);
 
   const waiting = queue.filter(q => q.status === "Waiting");
+  const inVisit = queue.filter(q => q.status === "In Visit");
   const completed = queue.filter(q => q.status === "Completed");
 
   const handleDragEnd = async (result) => {
@@ -174,6 +187,15 @@ export default function Queue() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(ids)
       });
+      fetchQueue();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleInVisit = async (id) => {
+    try {
+      await fetch(`/queue-api/${id}/in-visit`, { method: "PUT" });
       fetchQueue();
     } catch (e) {
       console.error(e);
@@ -237,12 +259,13 @@ export default function Queue() {
             <Droppable droppableId="queue-list">
               {(provided) => (
                 <table className="w-full text-left text-sm text-slate-600" {...provided.droppableProps} ref={provided.innerRef}>
-                  <thead className="bg-slate-50 border-b border-slate-100">
+                  <thead className="bg-yellow-50 border-b border-yellow-100">
                     <tr>
                       <th className="px-4 py-3 font-semibold w-12"></th>
                       <th className="px-4 py-3 font-semibold">Sr.</th>
                       <th className="px-4 py-3 font-semibold">Name</th>
                       <th className="px-4 py-3 font-semibold">Type</th>
+                      <th className="px-4 py-3 font-semibold">Appt Type</th>
                       <th className="px-4 py-3 font-semibold">Conditions</th>
                       <th className="px-4 py-3 font-semibold">Company</th>
                       <th className="px-4 py-3 font-semibold">Wait Time</th>
@@ -272,6 +295,9 @@ export default function Queue() {
                               {q.type === "Other" && <span className="px-2.5 py-1 bg-slate-100 text-slate-700 font-semibold text-[11px] rounded-md">OTHER</span>}
                             </td>
                             <td className="px-4 py-4">
+                              <span className="text-slate-700 font-medium">{q.appointmentType || "-"}</span>
+                            </td>
+                            <td className="px-4 py-4">
                               {q.type === "Patient" ? (
                                 q.conditions && q.conditions.length > 0 ? (
                                   <div className="flex gap-1 flex-wrap">
@@ -296,8 +322,8 @@ export default function Queue() {
                                 <button title="View Appointment Notes" onClick={() => setModal({ type: 'notes', notes: q.notes })} className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition">
                                   <StickyNote size={15} />
                                 </button>
-                                <button title="Complete" onClick={() => handleComplete(q.id)} className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition">
-                                  <CheckCircle2 size={15} />
+                                <button title="Start Visit" onClick={() => handleInVisit(q.id)} className="px-2 py-1.5 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold shadow-sm transition">
+                                  Start Visit
                                 </button>
                                 <button title="Remove" onClick={() => handleRemove(q.id)} className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition">
                                   <Trash2 size={15} />
@@ -322,16 +348,85 @@ export default function Queue() {
         </div>
       </Section>
 
-      {completed.length > 0 && (
-        <Section title="Completed Today">
+      {inVisit.length > 0 && (
+        <Section title="In Visit">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600 opacity-70">
-              <thead className="bg-slate-50 border-b border-slate-100">
+            <table className="w-full text-left text-sm text-slate-600">
+              <thead className="bg-pink-50 border-b border-pink-100">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Sr.</th>
                   <th className="px-4 py-3 font-semibold">Name</th>
                   <th className="px-4 py-3 font-semibold">Type</th>
+                  <th className="px-4 py-3 font-semibold">Appt Type</th>
+                  <th className="px-4 py-3 font-semibold">Conditions</th>
                   <th className="px-4 py-3 font-semibold">Wait Time</th>
+                  <th className="px-4 py-3 font-semibold text-pink-700">Visit Time</th>
+                  <th className="px-4 py-3 font-semibold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inVisit.map(q => (
+                  <tr key={q.id} className="border-b border-slate-50 hover:bg-slate-50/50">
+                    <td className="px-4 py-3 font-semibold text-slate-700">#{q.sr_no}</td>
+                    <td className="px-4 py-3">
+                      <div className="font-semibold text-slate-800">{q.name}</div>
+                      <div className="text-xs text-slate-400">{q.contact}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {q.type === "Patient" && <span className="px-2.5 py-1 bg-blue-100 text-blue-700 font-semibold text-[11px] rounded-md">PATIENT</span>}
+                      {q.type === "MR" && <span className="px-2.5 py-1 bg-purple-100 text-purple-700 font-semibold text-[11px] rounded-md">MR</span>}
+                      {q.type === "Other" && <span className="px-2.5 py-1 bg-slate-100 text-slate-700 font-semibold text-[11px] rounded-md">OTHER</span>}
+                    </td>
+                    <td className="px-4 py-3 font-medium text-slate-700">{q.appointmentType || "-"}</td>
+                    <td className="px-4 py-3">
+                      {q.type === "Patient" ? (
+                        q.conditions && q.conditions.length > 0 ? (
+                          <div className="flex gap-1 flex-wrap">
+                            {q.conditions.map((c, i) => <span key={i} className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-mono">{c}</span>)}
+                          </div>
+                        ) : <span className="text-xs text-slate-400">-</span>
+                      ) : <span className="text-xs text-slate-400">-</span>}
+                    </td>
+                    <td className="px-4 py-3 text-slate-500">{getWaitTimeStr(q.addedAt, q.inVisitAt)}</td>
+                    <td className="px-4 py-3 font-semibold text-pink-600">{getVisitTimeStr(q.inVisitAt)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        {q.type === "Patient" && (
+                          <button title="View Patient Details" onClick={() => handleViewPatient(q)} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition">
+                            <Eye size={15} />
+                          </button>
+                        )}
+                        <button title="View Appointment Notes" onClick={() => setModal({ type: 'notes', notes: q.notes })} className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition">
+                          <StickyNote size={15} />
+                        </button>
+                        <button title="Complete" onClick={() => handleComplete(q.id)} className="px-2 py-1.5 rounded-lg text-white bg-emerald-500 hover:bg-emerald-600 text-xs font-semibold shadow-sm transition">
+                          Complete
+                        </button>
+                        <button title="Remove" onClick={() => handleRemove(q.id)} className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Section>
+      )}
+
+      {completed.length > 0 && (
+        <Section title="Completed Today">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-slate-600 opacity-70">
+              <thead className="bg-green-50 border-b border-green-100">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">Sr.</th>
+                  <th className="px-4 py-3 font-semibold">Name</th>
+                  <th className="px-4 py-3 font-semibold">Type</th>
+                  <th className="px-4 py-3 font-semibold">Appt Type</th>
+                  <th className="px-4 py-3 font-semibold">Wait Time</th>
+                  <th className="px-4 py-3 font-semibold text-green-700">Visit Time</th>
                   <th className="px-4 py-3 font-semibold">Completed At</th>
                   <th className="px-4 py-3 font-semibold text-right">Actions</th>
                 </tr>
@@ -341,9 +436,15 @@ export default function Queue() {
                   <tr key={q.id} className="border-b border-slate-50 hover:bg-slate-50/50">
                     <td className="px-4 py-3">#{q.sr_no}</td>
                     <td className="px-4 py-3 font-semibold">{q.name}</td>
-                    <td className="px-4 py-3">{q.type}</td>
-                    <td className="px-4 py-3">{getWaitTimeStr(q.addedAt, q.completedAt)}</td>
-                    <td className="px-4 py-3">{new Date(q.completedAt).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit', hour12: true })}</td>
+                    <td className="px-4 py-3">
+                      {q.type === "Patient" && <span className="px-2.5 py-1 bg-blue-100 text-blue-700 font-semibold text-[11px] rounded-md">PATIENT</span>}
+                      {q.type === "MR" && <span className="px-2.5 py-1 bg-purple-100 text-purple-700 font-semibold text-[11px] rounded-md">MR</span>}
+                      {q.type === "Other" && <span className="px-2.5 py-1 bg-slate-100 text-slate-700 font-semibold text-[11px] rounded-md">OTHER</span>}
+                    </td>
+                    <td className="px-4 py-3">{q.appointmentType || "-"}</td>
+                    <td className="px-4 py-3 text-slate-500">{getWaitTimeStr(q.addedAt, q.inVisitAt || q.completedAt)}</td>
+                    <td className="px-4 py-3 font-semibold text-green-600">{q.inVisitAt ? getVisitTimeStr(q.inVisitAt, q.completedAt) : "-"}</td>
+                    <td className="px-4 py-3 text-slate-500">{new Date(q.completedAt).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit', hour12: true })}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
                         {q.type === "Patient" && (

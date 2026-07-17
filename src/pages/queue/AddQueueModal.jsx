@@ -21,6 +21,7 @@ export default function AddQueueModal({ onClose, onAdded }) {
     gender: "",
     age: "",
     contact: "",
+    appointmentType: "",
     conditions: [],
     company: "",
     notes: ""
@@ -143,6 +144,7 @@ export default function AddQueueModal({ onClose, onAdded }) {
       name: s.patientName || "",
       contact: s.contact || "",
       age: s.age || "",
+      appointmentType: s.appointmentType || "",
       notes: s.notes || s.concern || "",
       ...extra
     }));
@@ -273,6 +275,20 @@ export default function AddQueueModal({ onClose, onAdded }) {
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 mb-1.5">Contact Number</label>
                   <input className={inputClass()} value={form.contact} onChange={e => setForm({...form, contact: e.target.value})} />
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1.5">Appointment Type</label>
+                  <select className={inputClass()} value={form.appointmentType} onChange={e => setForm({...form, appointmentType: e.target.value})}>
+                    <option value="" disabled>Select Type</option>
+                    <option value="First Consultation">First Consultation</option>
+                    <option value="Follow Up">Follow Up</option>
+                    <option value="Vaccination">Vaccination</option>
+                    <option value="Routine Check">Routine Check</option>
+                    <option value="Sonography">Sonography</option>
+                    <option value="Surgery">Surgery</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
                 
                 <div>

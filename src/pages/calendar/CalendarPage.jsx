@@ -196,12 +196,18 @@ export default function CalendarPage() {
     };
   };
 
-  const handleSelectSlot = ({ start }) => {
+  const handleSelectSlot = (slotInfo) => {
     if (view === "month") {
-      setDate(start);
+      setDate(slotInfo.start);
       setView("day");
     } else {
-      navigate(`/calendar/add?date=${format(start, "yyyy-MM-dd")}&time=${format(start, "HH:mm")}`);
+      const isAllDay = (slotInfo.end - slotInfo.start) >= 24 * 60 * 60 * 1000 || 
+                       (slotInfo.slots && slotInfo.slots.length === 1 && slotInfo.start.getHours() === 0 && slotInfo.start.getMinutes() === 0 && slotInfo.end.getHours() === 23 && slotInfo.end.getMinutes() === 59);
+      let url = `/calendar/add?date=${format(slotInfo.start, "yyyy-MM-dd")}&time=${format(slotInfo.start, "HH:mm")}`;
+      if (isAllDay) {
+        url += "&allDay=true";
+      }
+      navigate(url);
     }
   };
 

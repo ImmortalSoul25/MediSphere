@@ -136,8 +136,10 @@ class QueueEntry(BaseModel):
     notes: str = ""
     
     # Meta
-    status: str = "Waiting" # "Waiting", "Completed"
+    status: str = "Waiting" # "Waiting", "In Visit", "Completed"
+    appointmentType: Optional[str] = ""
     addedAt: str = "" # ISO datetime
+    inVisitAt: Optional[str] = None
     completedAt: Optional[str] = None
 
 class CalendarEvent(BaseModel):

@@ -479,6 +479,18 @@ export default function PatientDetails() {
                                   <span className="w-20 text-slate-500 font-medium">Type:</span>
                                   <span className="text-slate-800 font-medium">{appt.appointmentType || 'Regular'}</span>
                                 </div>
+                                {appt.wait_time_minutes !== undefined && appt.wait_time_minutes !== null && (
+                                  <div className="flex mb-2">
+                                    <span className="w-20 text-slate-500 font-medium">Wait Time:</span>
+                                    <span className="text-amber-600 font-medium">{appt.wait_time_minutes} min</span>
+                                  </div>
+                                )}
+                                {appt.visit_time_minutes !== undefined && appt.visit_time_minutes !== null && (
+                                  <div className="flex mb-2">
+                                    <span className="w-20 text-slate-500 font-medium">Visit Time:</span>
+                                    <span className="text-pink-600 font-medium">{appt.visit_time_minutes} min</span>
+                                  </div>
+                                )}
                                 {appt.concern && (
                                   <div className="flex mb-2">
                                     <span className="w-20 text-slate-500 font-medium">Concern:</span>

@@ -44,6 +44,19 @@ async def add_to_queue(req: Request):
     doc.pop("_id", None)
     return doc
 
+@router.put("/{entry_id}/in-visit")
+async def start_queue_visit(entry_id: str):
+    entry = await queue_collection.find_one({"id": entry_id})
+    if not entry:
+        raise HTTPException(status_code=404, detail="Queue entry not found")
+        
+    in_visit_time = datetime.now(timezone.utc).isoformat()
+    await queue_collection.update_one(
+        {"id": entry_id}, 
+        {"$set": {"status": "In Visit", "inVisitAt": in_visit_time}}
+    )
+    return {"message": "Patient moved to In Visit"}
+
 @router.put("/{entry_id}/complete")
 async def complete_queue_entry(entry_id: str):
     entry = await queue_collection.find_one({"id": entry_id})
@@ -59,16 +72,30 @@ async def complete_queue_entry(entry_id: str):
     now_time = completed_time.strftime("%I:%M %p")
     
     wait_time_minutes = 0
-    if entry.get("addedAt"):
-        try:
-            added_time = datetime.fromisoformat(entry.get("addedAt").replace("Z", "+00:00"))
-            if added_time.tzinfo is None:
-                completed_time_calc = completed_time.replace(tzinfo=None)
+    visit_time_minutes = 0
+    
+    # Calculate times
+    try:
+        added_time = datetime.fromisoformat(entry.get("addedAt").replace("Z", "+00:00")) if entry.get("addedAt") else None
+        in_visit_time = datetime.fromisoformat(entry.get("inVisitAt").replace("Z", "+00:00")) if entry.get("inVisitAt") else None
+        
+        # Ensure timezone info
+        if added_time and added_time.tzinfo is None:
+            added_time = added_time.replace(tzinfo=timezone.utc)
+        if in_visit_time and in_visit_time.tzinfo is None:
+            in_visit_time = in_visit_time.replace(tzinfo=timezone.utc)
+            
+        completed_time_calc = completed_time
+        
+        if added_time:
+            if in_visit_time:
+                wait_time_minutes = int((in_visit_time - added_time).total_seconds() / 60)
+                visit_time_minutes = int((completed_time_calc - in_visit_time).total_seconds() / 60)
             else:
-                completed_time_calc = completed_time
-            wait_time_minutes = int((completed_time_calc - added_time).total_seconds() / 60)
-        except Exception:
-            pass
+                wait_time_minutes = int((completed_time_calc - added_time).total_seconds() / 60)
+                visit_time_minutes = 0
+    except Exception:
+        pass
             
     # 1. Update queue entry
     await queue_collection.update_one(
@@ -85,8 +112,10 @@ async def complete_queue_entry(entry_id: str):
         # Append visit to patient history
         visit_record = {
             "date": today_str,
-            "type": "Consultation",
-            "notes": entry.get("notes", "")
+            "type": entry.get("appointmentType") or "Consultation",
+            "notes": entry.get("notes", ""),
+            "waitTime": wait_time_minutes,
+            "visitTime": visit_time_minutes
         }
         await patients_collection.update_one(
             {"metadata.id": pid},
@@ -104,6 +133,7 @@ async def complete_queue_entry(entry_id: str):
             scheduled["status"] = "Completed"
             scheduled["completedAt"] = completed_at
             scheduled["wait_time_minutes"] = wait_time_minutes
+            scheduled["visit_time_minutes"] = visit_time_minutes
             
             # Avoid duplicate _id error
             if "_id" in scheduled:
@@ -124,9 +154,11 @@ async def complete_queue_entry(entry_id: str):
                 "status": "Completed",
                 "appointmentDate": today_str,
                 "appointmentTime": datetime.now().strftime("%H:%M"),
+                "appointmentType": entry.get("appointmentType") or "Consultation",
                 "createdAt": completed_at,
                 "completedAt": completed_at,
-                "wait_time_minutes": wait_time_minutes
+                "wait_time_minutes": wait_time_minutes,
+                "visit_time_minutes": visit_time_minutes
             }
             await past_appointments_collection.insert_one(new_past_appt)
 
@@ -175,7 +207,7 @@ async def revert_queue_entry(entry_id: str):
         
         await patients_collection.update_one(
             {"metadata.id": pid},
-            {"$pull": {"visits": {"date": today_str, "type": "Consultation"}}}
+            {"$pull": {"visits": {"date": today_str}}}
         )
 
     await queue_collection.update_one(
@@ -200,9 +232,10 @@ async def delete_queue_entry(entry_id: str):
             "appointmentDate": today_str
         })
         
+        # It's tricky to pull by type if type is dynamic, but we can match date
         await patients_collection.update_one(
             {"metadata.id": pid},
-            {"$pull": {"visits": {"date": today_str, "type": "Consultation"}}}
+            {"$pull": {"visits": {"date": today_str}}}
         )
 
     await queue_collection.delete_one({"id": entry_id})
