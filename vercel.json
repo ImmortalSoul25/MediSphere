@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/auth",
+      "destination": "https://medisphere-pxwm.onrender.com/auth"
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "https://medisphere-pxwm.onrender.com/auth/:path*"
+    },
+    {
       "source": "/patient",
       "destination": "https://medisphere-pxwm.onrender.com/patient"
     },
