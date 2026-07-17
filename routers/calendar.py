@@ -13,7 +13,7 @@ async def get_events(
     end: Optional[str] = None, 
     type: Optional[str] = None
 ):
-    query = {"status": "Active"}
+    query = {"$or": [{"status": "Active"}, {"status": {"$exists": False}}]}
     
     if type:
         query["type"] = type

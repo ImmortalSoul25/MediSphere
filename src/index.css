@@ -173,3 +173,14 @@ body {
 .badge-amber  { background: #fef3c7; color: #92400e; }
 .badge-indigo { background: #e0e7ff; color: #3730a3; }
 .badge-slate  { background: #f1f5f9; color: #475569; }
+
+/* Custom fix for react-big-calendar All Day label in Day/Week views */
+.rbc-time-header-gutter::after {
+  content: 'All Day';
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-align: center;
+  padding-top: 10px;
+}

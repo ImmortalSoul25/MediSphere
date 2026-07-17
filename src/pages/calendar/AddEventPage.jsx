@@ -108,7 +108,8 @@ export default function AddEventPage() {
     return newErrors;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e?.preventDefault?.();
     const vErrors = validate();
     if (Object.keys(vErrors).length > 0) {
       setErrors(vErrors);
@@ -120,13 +121,19 @@ export default function AddEventPage() {
     setServerError(null);
     
     try {
+      const finalData = { ...form };
+      if (finalData.allDay || finalData.type === "Birthday" || finalData.type === "Pregnancy Due Date") {
+        finalData.endDate = finalData.startDate;
+        finalData.allDay = true;
+      }
+
       const url = isEdit ? `/calendar-api/${id}` : `/calendar-api`;
       const method = isEdit ? "PUT" : "POST";
       
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+        body: JSON.stringify(finalData)
       });
       
       if (!res.ok) throw new Error("Failed to save event");

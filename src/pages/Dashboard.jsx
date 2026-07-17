@@ -140,11 +140,11 @@ export default function Dashboard() {
 
   const stats = [
     { label: "Total Patients",               value: totalPatients,      icon: Users,         accent: "teal"   },
-    { label: "Total Active Patients",        value: activePatients,     icon: UserCheck,     accent: "green"  },
-    { label: "Appointments Today",           value: apptToday,          icon: CalendarDays,  accent: "indigo" },
-    { label: "Appointment request Pending",  value: pendingRequests,    icon: ClockAlert,    accent: "amber"  },
+    { label: "Active Patients",              value: activePatients,     icon: UserCheck,     accent: "green"  },
+    { label: "Appts Today",                  value: apptToday,          icon: CalendarDays,  accent: "indigo" },
+    { label: "Pending Requests",             value: pendingRequests,    icon: ClockAlert,    accent: "amber"  },
     { label: "Events Today",                 value: eventsTodayCount,   icon: Clock,         accent: "pink"   },
-    { label: "Upcoming This Week",           value: upcomingThisWeek,   icon: CalendarIcon,  accent: "blue"   },
+    { label: "Upcoming Week",                value: upcomingThisWeek,   icon: CalendarIcon,  accent: "blue"   },
   ];
 
   // Upcoming 5 events sorted by start date

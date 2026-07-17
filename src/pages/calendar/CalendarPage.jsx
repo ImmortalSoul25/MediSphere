@@ -85,11 +85,29 @@ export default function CalendarPage() {
         const createInstance = (baseDate, baseEndDate, index) => {
           let start, end;
           if (e.allDay || (!e.startTime && !e.endTime)) {
+            // For allDay events, endDate is hidden in the form and might be stale (e.g. less than startDate)
+            // Force end to be the same as baseDate.
             start = new Date(baseDate + "T00:00:00");
-            end = new Date(baseEndDate ? baseEndDate + "T23:59:59" : baseDate + "T23:59:59");
+            end = new Date(baseDate + "T23:59:59");
           } else {
-            start = new Date(baseDate + "T" + (e.startTime || "00:00"));
-            end = new Date((baseEndDate || baseDate) + "T" + (e.endTime || "23:59"));
+            // Ensure safe parsing if startTime is somehow invalid
+            const safeStartTime = e.startTime && e.startTime.includes(":") ? e.startTime : "00:00";
+            const safeEndTime = e.endTime && e.endTime.includes(":") ? e.endTime : "23:59";
+            
+            // Fix stale end dates
+            let safeBaseEndDate = baseEndDate || baseDate;
+            if (safeBaseEndDate < baseDate) {
+              safeBaseEndDate = baseDate;
+            }
+            
+            start = new Date(baseDate + "T" + safeStartTime);
+            end = new Date(safeBaseEndDate + "T" + safeEndTime);
+          }
+          
+          if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            console.error("Invalid date parsing for event:", e);
+            start = new Date(baseDate + "T00:00:00");
+            end = new Date(baseDate + "T23:59:59");
           }
           
           return {
@@ -197,7 +215,7 @@ export default function CalendarPage() {
   const today = new Date();
   const todayStr = format(today, "yyyy-MM-dd");
   
-  const activeEvents = events.filter(e => e.status === "Active");
+  const activeEvents = events.filter(e => e.status === "Active" || !e.status);
   const eventsToday = activeEvents.filter(e => e.type !== "Reminder" && format(e.start, "yyyy-MM-dd") <= todayStr && format(e.end, "yyyy-MM-dd") >= todayStr).length;
   
   const thisMonth = today.getMonth();
@@ -289,6 +307,7 @@ export default function CalendarPage() {
             events={filteredEvents}
             startAccessor="start"
             endAccessor="end"
+            allDayAccessor="allDay"
             style={{ height: "100%", fontFamily: "inherit" }}
             eventPropGetter={eventStyleGetter}
             onSelectSlot={handleSelectSlot}
