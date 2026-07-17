@@ -179,11 +179,27 @@ export default function Dashboard() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Dashboard</h1>
-        <p className="mt-1 text-slate-500">
-          Welcome back — here's a snapshot of the portal today.
-        </p>
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Dashboard</h1>
+          <p className="mt-1 text-slate-500">
+            Welcome back — here's a snapshot of the portal today.
+          </p>
+        </div>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <button 
+            onClick={() => navigate("/appointments/today")}
+            className="flex-1 sm:flex-none bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition shadow-sm"
+          >
+            Today's Appointments
+          </button>
+          <button 
+            onClick={() => navigate("/queue")}
+            className="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition shadow-sm"
+          >
+            Manage Queue
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-stretch pb-12">

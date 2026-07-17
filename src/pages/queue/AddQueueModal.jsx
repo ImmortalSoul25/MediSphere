@@ -17,6 +17,7 @@ export default function AddQueueModal({ onClose, onAdded }) {
   
   const [form, setForm] = useState({
     patientId: "",
+    appointmentId: "",
     name: "",
     gender: "",
     age: "",
@@ -141,6 +142,7 @@ export default function AddQueueModal({ onClose, onAdded }) {
     setForm(f => ({
       ...f,
       patientId: s.patientId || "",
+      appointmentId: s.id || "",
       name: s.patientName || "",
       contact: s.contact || "",
       age: s.age || "",
@@ -283,10 +285,9 @@ export default function AddQueueModal({ onClose, onAdded }) {
                     <option value="" disabled>Select Type</option>
                     <option value="First Consultation">First Consultation</option>
                     <option value="Follow Up">Follow Up</option>
-                    <option value="Vaccination">Vaccination</option>
-                    <option value="Routine Check">Routine Check</option>
                     <option value="Sonography">Sonography</option>
                     <option value="Surgery">Surgery</option>
+                    <option value="Meeting">Meeting</option>
                     <option value="Other">Other</option>
                   </select>
                 </div>

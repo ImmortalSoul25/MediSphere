@@ -348,8 +348,7 @@ export default function Queue() {
         </div>
       </Section>
 
-      {inVisit.length > 0 && (
-        <Section title="In Visit">
+      <Section title="In Visit">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-slate-600">
               <thead className="bg-pink-50 border-b border-pink-100">
@@ -409,14 +408,17 @@ export default function Queue() {
                     </td>
                   </tr>
                 ))}
+                {inVisit.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-12 text-center text-slate-500">No one is currently in visit.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-        </Section>
-      )}
+      </Section>
 
-      {completed.length > 0 && (
-        <Section title="Completed Today">
+      <Section title="Completed Today">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-slate-600 opacity-70">
               <thead className="bg-green-50 border-b border-green-100">
@@ -465,11 +467,15 @@ export default function Queue() {
                     </td>
                   </tr>
                 ))}
+                {completed.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-12 text-center text-slate-500">No one has completed their visit today.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-        </Section>
-      )}
+      </Section>
 
       {showAdd && <AddQueueModal onClose={() => setShowAdd(false)} onAdded={() => { setShowAdd(false); fetchQueue(); }} />}
       {modal?.type === "notes" && (

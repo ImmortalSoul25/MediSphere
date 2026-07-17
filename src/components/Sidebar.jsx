@@ -43,6 +43,7 @@ function NavItem({ to, label, Icon }) {
 }
 
 const APPT_ROUTES = [
+  "/appointments/today",
   "/appointments/requests",
   "/appointments/scheduled",
   "/appointments/past",
@@ -122,6 +123,7 @@ export default function Sidebar() {
         <NavItem to="/patients"          label="Patients"           Icon={Users} />
 
         <NavGroup label="Appointments" Icon={CalendarDays}>
+          <SubNavItem to="/appointments/today"     label="Today's Appointments" Icon={CalendarDays} />
           <SubNavItem to="/appointments/requests"  label="Requests Pending"  Icon={ClockAlert} />
           <SubNavItem to="/appointments/scheduled" label="Scheduled"         Icon={CalendarCheck} />
           <SubNavItem to="/appointments/past"      label="Past Appointments" Icon={CalendarX} />

@@ -271,10 +271,9 @@ function ApproveModalExpired({ request, patients, onConfirm, onClose, onAddPatie
               <option value="" disabled>Select Type</option>
               <option value="First Consultation">First Consultation</option>
               <option value="Follow Up">Follow Up</option>
-              <option value="Routine Check">Routine Check</option>
-              <option value="Vaccination">Vaccination</option>
               <option value="Sonography">Sonography</option>
               <option value="Surgery">Surgery</option>
+              <option value="Meeting">Meeting</option>
               <option value="Other">Other</option>
             </select>
             {errors.type && (

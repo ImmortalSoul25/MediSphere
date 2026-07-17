@@ -123,10 +123,16 @@ async def complete_queue_entry(entry_id: str):
         )
         
         # Check if there's a scheduled appointment for today for this patient
-        scheduled = await scheduled_appointments_collection.find_one({
-            "patientId": pid,
-            "appointmentDate": today_str
-        })
+        scheduled = None
+        if entry.get("appointmentId"):
+            scheduled = await scheduled_appointments_collection.find_one({"id": entry["appointmentId"]})
+        
+        if not scheduled:
+            scheduled = await scheduled_appointments_collection.find_one({
+                "patientId": pid,
+                "appointmentDate": today_str
+            })
+        
         
         if scheduled:
             # Move to past appointments
@@ -153,7 +159,7 @@ async def complete_queue_entry(entry_id: str):
                 "concern": entry.get("notes", ""),
                 "status": "Completed",
                 "appointmentDate": today_str,
-                "appointmentTime": datetime.now().strftime("%H:%M"),
+                "appointmentTime": datetime.now().strftime("%I:%M %p"),
                 "appointmentType": entry.get("appointmentType") or "Consultation",
                 "createdAt": completed_at,
                 "completedAt": completed_at,

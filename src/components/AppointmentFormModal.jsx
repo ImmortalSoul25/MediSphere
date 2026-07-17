@@ -146,8 +146,8 @@ export default function AppointmentFormModal({
   const submit = () => {
     const nextErrors = {};
     if (!form.patientName.trim()) nextErrors.patientName = "Patient name is required.";
-    if (!/^\d{10}$/.test(form.contact.trim())) nextErrors.contact = "Enter a valid 10-digit contact number.";
-    if (!String(form.age).trim() || Number(form.age) <= 0) nextErrors.age = "Enter a valid age.";
+    if (form.contact.trim() && !/^\d{10}$/.test(form.contact.trim())) nextErrors.contact = "Enter a valid 10-digit contact number.";
+    if (form.age && (Number(form.age) <= 0 || isNaN(Number(form.age)))) nextErrors.age = "Enter a valid age.";
     if (!form.appointmentDate) nextErrors.appointmentDate = "Date is required.";
     if (!form.appointmentType) nextErrors.appointmentType = "Type is required.";
     if (!time.hour || !time.minute || !/^(1[0-2]|[1-9])$/.test(time.hour) || !/^([0-5][0-9])$/.test(time.minute)) {
@@ -238,7 +238,7 @@ export default function AppointmentFormModal({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Contact Number" required error={errors.contact}>
+            <Field label="Contact Number" error={errors.contact}>
               <input
                 value={form.contact}
                 onChange={(e) => set("contact", e.target.value.replace(/\D/g, "").slice(0, 10))}
@@ -246,7 +246,7 @@ export default function AppointmentFormModal({
                 className={lockedPatient ? "w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-100 text-slate-500" : inputClass(!!errors.contact)}
               />
             </Field>
-            <Field label="Age" required error={errors.age}>
+            <Field label="Age" error={errors.age}>
               <input
                 value={form.age}
                 onChange={(e) => set("age", e.target.value.replace(/\D/g, "").slice(0, 3))}
@@ -278,10 +278,9 @@ export default function AppointmentFormModal({
               <option value="" disabled>Select Type</option>
               <option value="First Consultation">First Consultation</option>
               <option value="Follow Up">Follow Up</option>
-              <option value="Vaccination">Vaccination</option>
-              <option value="Routine Check">Routine Check</option>
               <option value="Sonography">Sonography</option>
               <option value="Surgery">Surgery</option>
+              <option value="Meeting">Meeting</option>
               <option value="Other">Other</option>
             </select>
           </Field>

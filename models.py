@@ -138,6 +138,7 @@ class QueueEntry(BaseModel):
     # Meta
     status: str = "Waiting" # "Waiting", "In Visit", "Completed"
     appointmentType: Optional[str] = ""
+    appointmentId: Optional[str] = ""
     addedAt: str = "" # ISO datetime
     inVisitAt: Optional[str] = None
     completedAt: Optional[str] = None

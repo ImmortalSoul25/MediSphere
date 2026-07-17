@@ -11,6 +11,7 @@ import Queue                 from "./pages/queue/Queue";
 import Patients              from "./pages/Patients";
 import PatientDetails        from "./pages/PatientDetails";
 import PatientFormPage       from "./pages/PatientFormPage";
+import TodayAppointments       from "./pages/appointments/TodayAppointments";
 import RequestsPending from "./pages/appointments/RequestsPending";
 import RequestsRejected from "./pages/appointments/RequestsRejected";
 import RequestsExpired from "./pages/appointments/RequestsExpired";
@@ -45,6 +46,7 @@ export default function App() {
                 <Route path="/patients/:id/edit"       element={<PatientFormPage />} />
                 <Route path="/patients/:id/abha"       element={<AbhaManagement />} />
                 <Route path="/patients/:id/records"    element={<ImportedRecords />} />
+                <Route path="/appointments/today"      element={<TodayAppointments />} />
                 <Route path="/appointments/requests"   element={<RequestsPending />} />
                 <Route path="/appointments/requests/rejected" element={<RequestsRejected />} />
                 <Route path="/appointments/requests/expired" element={<RequestsExpired />} />
