@@ -99,6 +99,16 @@ async def reject_request(request_id: str):
         raise HTTPException(status_code=404, detail="Not found")
     return {"ok": True}
 
+@router.patch("/requests/{request_id}/dismiss")
+async def dismiss_request_notification(request_id: str):
+    res = await appointment_requests_collection.update_one(
+        {"$or": [{"requestId": request_id}, {"id": request_id}, {"request_id": request_id}]},
+        {"$set": {"notificationDismissed": True}}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"ok": True}
+
 @router.get("/scheduled-appointments")
 async def get_scheduled_appointments():
     return await scheduled_appointments_collection.find({}, {"_id": 0}).to_list(length=None)

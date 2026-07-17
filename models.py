@@ -61,6 +61,7 @@ class AppointmentRequest(BaseModel):
     concern: str = ""
     status: str = "Pending"
     createdAt: str = ""
+    notificationDismissed: bool = False
 
     class Config:
         populate_by_name = True
@@ -154,5 +155,9 @@ class CalendarEvent(BaseModel):
     color: str = ""
     status: str = "Active"
     notes: Optional[str] = ""
+    customReminderDate: Optional[str] = None
+    customReminderTime: Optional[str] = None
+    customRepeatWeek: Optional[str] = None
+    customRepeatDay: Optional[str] = None
     createdAt: str = Field(default_factory=lambda: datetime.now().isoformat())
     updatedAt: str = Field(default_factory=lambda: datetime.now().isoformat())

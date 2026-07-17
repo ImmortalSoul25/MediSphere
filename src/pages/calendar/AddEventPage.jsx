@@ -28,7 +28,10 @@ export default function AddEventPage() {
     repeat: "Does Not Repeat",
     reminder: "30 Minutes",
     status: "Active",
-    notes: ""
+    customReminderDate: defaultDate,
+    customReminderTime: defaultTime,
+    customRepeatWeek: "1st",
+    customRepeatDay: "Monday"
   });
 
   useEffect(() => {
@@ -52,12 +55,18 @@ export default function AddEventPage() {
     }
   }, [id, isEdit]);
 
-  // Handle Birthday type auto-assignments
+  // Handle Birthday and Pregnancy type auto-assignments
   useEffect(() => {
     if (form.type === "Birthday") {
       setForm(prev => ({
         ...prev,
         repeat: "Yearly",
+        allDay: true
+      }));
+    } else if (form.type === "Pregnancy Due Date") {
+      setForm(prev => ({
+        ...prev,
+        repeat: "Does Not Repeat",
         allDay: true
       }));
     }
@@ -81,7 +90,7 @@ export default function AddEventPage() {
     if (!form.startDate) newErrors.startDate = "Start Date is required";
     
     // Logic for Event vs Reminder
-    if (form.type !== "Birthday" && form.type !== "Reminder" && !form.allDay) {
+    if (form.type !== "Birthday" && form.type !== "Reminder" && form.type !== "Pregnancy Due Date" && !form.allDay) {
       if (!form.endDate) newErrors.endDate = "End Date is required";
       if (!form.startTime) newErrors.startTime = "Start Time is required";
       if (!form.endTime) newErrors.endTime = "End Time is required";
@@ -89,6 +98,11 @@ export default function AddEventPage() {
 
     if (form.type === "Reminder" && !form.allDay) {
       if (!form.startTime) newErrors.startTime = "Time is required";
+    }
+    
+    if (form.reminder === "Custom") {
+      if (!form.customReminderDate) newErrors.customReminderDate = "Date is required";
+      if (!form.customReminderTime) newErrors.customReminderTime = "Time is required";
     }
 
     return newErrors;
@@ -148,6 +162,7 @@ export default function AddEventPage() {
 
   const isReminder = form.type === "Reminder";
   const isBirthday = form.type === "Birthday";
+  const isPregnancy = form.type === "Pregnancy Due Date";
 
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6 pb-24">
@@ -189,6 +204,8 @@ export default function AddEventPage() {
                 <option value="Meeting">Meeting</option>
                 <option value="Leave / Holiday">Leave / Holiday</option>
                 <option value="Reminder">Reminder</option>
+                <option value="School Lecture/ Conference/Talk">School Lecture/ Conference/Talk</option>
+                <option value="Pregnancy Due Date">Pregnancy Due Date</option>
                 <option value="Other">Other</option>
               </select>
             </div>
@@ -209,7 +226,7 @@ export default function AddEventPage() {
               <textarea name="description" value={form.description} onChange={handleChange} rows="2" className={inputClass(false)} />
             </div>
 
-            {!isBirthday && (
+            {!isBirthday && !isPregnancy && (
               <div className="md:col-span-2 flex items-center gap-2">
                 <input type="checkbox" id="allDay" name="allDay" checked={form.allDay} onChange={handleChange} className="w-4 h-4 text-indigo-600 rounded" />
                 <label htmlFor="allDay" className="text-sm font-medium text-slate-700">All Day Event</label>
@@ -217,7 +234,7 @@ export default function AddEventPage() {
             )}
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Start Date <span className="text-rose-500">*</span></label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">{form.allDay ? "Date" : "Start Date"} <span className="text-rose-500">*</span></label>
               <input type="date" name="startDate" value={form.startDate} onChange={handleChange} className={inputClass(errors.startDate)} />
               {errors.startDate && <p className="text-xs text-rose-500 mt-1">{errors.startDate}</p>}
             </div>
@@ -230,33 +247,59 @@ export default function AddEventPage() {
               </div>
             )}
 
-            {!isBirthday && !isReminder && (
+            {!isBirthday && !isReminder && !isPregnancy && !form.allDay && (
               <>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">End Date {!form.allDay && <span className="text-rose-500">*</span>}</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">End Date <span className="text-rose-500">*</span></label>
                   <input type="date" name="endDate" value={form.endDate} onChange={handleChange} className={inputClass(errors.endDate)} />
                   {errors.endDate && <p className="text-xs text-rose-500 mt-1">{errors.endDate}</p>}
                 </div>
-                {!form.allDay && (
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">End Time <span className="text-rose-500">*</span></label>
-                    <input type="time" name="endTime" value={form.endTime} onChange={handleChange} className={inputClass(errors.endTime)} />
-                    {errors.endTime && <p className="text-xs text-rose-500 mt-1">{errors.endTime}</p>}
-                  </div>
-                )}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">End Time <span className="text-rose-500">*</span></label>
+                  <input type="time" name="endTime" value={form.endTime} onChange={handleChange} className={inputClass(errors.endTime)} />
+                  {errors.endTime && <p className="text-xs text-rose-500 mt-1">{errors.endTime}</p>}
+                </div>
               </>
             )}
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">Repeat</label>
-              <select name="repeat" value={form.repeat} onChange={handleChange} disabled={isBirthday} className={inputClass(false) + (isBirthday ? " bg-slate-100" : "")}>
+              <select name="repeat" value={form.repeat} onChange={handleChange} disabled={isBirthday || isPregnancy} className={inputClass(false) + ((isBirthday || isPregnancy) ? " bg-slate-100" : "")}>
                 <option value="Does Not Repeat">Does Not Repeat</option>
                 <option value="Daily">Daily</option>
                 <option value="Weekly">Weekly</option>
                 <option value="Monthly">Monthly</option>
+                <option value="Custom Monthly">Custom Monthly</option>
                 <option value="Yearly">Yearly</option>
               </select>
             </div>
+            
+            {form.repeat === "Custom Monthly" && (
+              <div className="md:col-span-2 grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Which Week?</label>
+                  <select name="customRepeatWeek" value={form.customRepeatWeek} onChange={handleChange} className={inputClass(false)}>
+                    <option value="1st">1st</option>
+                    <option value="2nd">2nd</option>
+                    <option value="3rd">3rd</option>
+                    <option value="4th">4th</option>
+                    <option value="Last">Last</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Day of Week</label>
+                  <select name="customRepeatDay" value={form.customRepeatDay} onChange={handleChange} className={inputClass(false)}>
+                    <option value="Sunday">Sunday</option>
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                  </select>
+                </div>
+              </div>
+            )}
             
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">Reminder</label>
@@ -266,13 +309,24 @@ export default function AddEventPage() {
                 <option value="30 Minutes">30 Minutes</option>
                 <option value="1 Hour">1 Hour</option>
                 <option value="1 Day">1 Day</option>
+                <option value="Custom">Custom</option>
               </select>
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Additional Notes</label>
-              <textarea name="notes" value={form.notes} onChange={handleChange} rows="3" className={inputClass(false)} />
-            </div>
+            {form.reminder === "Custom" && (
+              <div className="md:col-span-2 grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Custom Date <span className="text-rose-500">*</span></label>
+                  <input type="date" name="customReminderDate" value={form.customReminderDate} onChange={handleChange} className={inputClass(errors.customReminderDate)} />
+                  {errors.customReminderDate && <p className="text-xs text-rose-500 mt-1">{errors.customReminderDate}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Custom Time <span className="text-rose-500">*</span></label>
+                  <input type="time" name="customReminderTime" value={form.customReminderTime} onChange={handleChange} className={inputClass(errors.customReminderTime)} />
+                  {errors.customReminderTime && <p className="text-xs text-rose-500 mt-1">{errors.customReminderTime}</p>}
+                </div>
+              </div>
+            )}
 
           </div>
         </div>

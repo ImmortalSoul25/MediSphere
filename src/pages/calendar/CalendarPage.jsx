@@ -19,12 +19,36 @@ const localizer = dateFnsLocalizer({
 });
 
 const EVENT_COLORS = {
-  "Hospital Event": "#22c55e", // green
-  "Birthday": "#f472b6", // pink
-  "Meeting": "#3b82f6", // blue
-  "Leave / Holiday": "#ef4444", // red
-  "Reminder": "#f97316", // orange
-  "Other": "#64748b", // gray
+  "Hospital Event": "#e2e8f0", // Light Grey
+  "Birthday": "#bae6fd", // Light Blue
+  "Meeting": "#bbf7d0", // Light Green
+  "Leave / Holiday": "#fef08a", // Light Yellow
+  "Reminder": "#fed7aa", // Light Orange
+  "Pregnancy Due Date": "#fecaca", // Light Red
+  "School Lecture/ Conference/Talk": "#e9d5ff", // Light Purple
+  "Other": "#fed7aa", // Light Brown
+};
+
+const getCustomMonthlyDate = (year, month, weekStr, dayStr) => {
+  const daysMap = { "Sunday": 0, "Monday": 1, "Tuesday": 2, "Wednesday": 3, "Thursday": 4, "Friday": 5, "Saturday": 6 };
+  const targetDay = daysMap[dayStr];
+  if (targetDay === undefined) return null;
+  
+  const firstDayOfMonth = new Date(year, month, 1);
+  const currentDay = firstDayOfMonth.getDay();
+  const offset = (targetDay - currentDay + 7) % 7;
+  
+  let targetDate = new Date(year, month, 1 + offset);
+  
+  if (weekStr === "2nd") targetDate.setDate(targetDate.getDate() + 7);
+  else if (weekStr === "3rd") targetDate.setDate(targetDate.getDate() + 14);
+  else if (weekStr === "4th") targetDate.setDate(targetDate.getDate() + 21);
+  else if (weekStr === "Last") {
+      while (targetDate.getMonth() === month) targetDate.setDate(targetDate.getDate() + 7);
+      targetDate.setDate(targetDate.getDate() - 7);
+  }
+  
+  return targetDate;
 };
 
 function StatCard({ label, value, Icon, colorClass }) {
@@ -55,24 +79,77 @@ export default function CalendarPage() {
       const res = await fetch("/calendar-api");
       const data = await res.json();
       
-      const formattedEvents = data.map(e => {
-        let start, end;
-        if (e.allDay || (!e.startTime && !e.endTime)) {
-          start = new Date(e.startDate + "T00:00:00");
-          end = new Date(e.endDate ? e.endDate + "T23:59:59" : e.startDate + "T23:59:59");
-        } else {
-          start = new Date(e.startDate + "T" + (e.startTime || "00:00"));
-          end = new Date((e.endDate || e.startDate) + "T" + (e.endTime || "23:59"));
-        }
-        
-        return {
-          ...e,
-          start,
-          end,
-          title: e.type === "Birthday" ? `🎂 ${e.title}` : e.title,
+      const expandedEvents = [];
+      
+      data.forEach(e => {
+        const createInstance = (baseDate, baseEndDate, index) => {
+          let start, end;
+          if (e.allDay || (!e.startTime && !e.endTime)) {
+            start = new Date(baseDate + "T00:00:00");
+            end = new Date(baseEndDate ? baseEndDate + "T23:59:59" : baseDate + "T23:59:59");
+          } else {
+            start = new Date(baseDate + "T" + (e.startTime || "00:00"));
+            end = new Date((baseEndDate || baseDate) + "T" + (e.endTime || "23:59"));
+          }
+          
+          return {
+            ...e,
+            id: e.id + (index ? `_instance_${index}` : ""),
+            allDay: e.allDay || (!e.startTime && !e.endTime), // Ensure allDay is explicitly true/false
+            start,
+            end,
+            title: e.type === "Birthday" ? `🎂 ${e.title}` : e.title,
+            instanceDate: baseDate,
+          };
         };
+
+        const startDate = new Date(e.startDate);
+        expandedEvents.push(createInstance(e.startDate, e.endDate, 0));
+
+        if (e.repeat && e.repeat !== "Does Not Repeat") {
+          const yearsToExpand = e.type === "Birthday" ? 10 : 3;
+          const maxDate = new Date(startDate);
+          maxDate.setFullYear(maxDate.getFullYear() + yearsToExpand);
+          
+          let currentDate = new Date(startDate);
+          let index = 1;
+          
+          while (true) {
+            if (e.repeat === "Daily") {
+              currentDate.setDate(currentDate.getDate() + 1);
+            } else if (e.repeat === "Weekly") {
+              currentDate.setDate(currentDate.getDate() + 7);
+            } else if (e.repeat === "Monthly") {
+              currentDate.setMonth(currentDate.getMonth() + 1);
+            } else if (e.repeat === "Yearly") {
+              currentDate.setFullYear(currentDate.getFullYear() + 1);
+            } else if (e.repeat === "Custom Monthly") {
+              currentDate.setMonth(currentDate.getMonth() + 1);
+              currentDate = getCustomMonthlyDate(currentDate.getFullYear(), currentDate.getMonth(), e.customRepeatWeek || "1st", e.customRepeatDay || "Monday");
+              if (!currentDate) break;
+            } else {
+              break;
+            }
+            
+            if (currentDate > maxDate) break;
+            
+            const dateStr = format(currentDate, "yyyy-MM-dd");
+            let endDateStr = dateStr;
+            if (e.endDate) {
+              const diffTime = Math.abs(new Date(e.endDate) - startDate);
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+              const newEnd = new Date(currentDate);
+              newEnd.setDate(newEnd.getDate() + diffDays);
+              endDateStr = format(newEnd, "yyyy-MM-dd");
+            }
+            
+            expandedEvents.push(createInstance(dateStr, endDateStr, index));
+            index++;
+          }
+        }
       });
-      setEvents(formattedEvents);
+      
+      setEvents(expandedEvents);
     } catch (error) {
       console.error("Failed to fetch events", error);
     } finally {
@@ -91,12 +168,12 @@ export default function CalendarPage() {
         backgroundColor,
         borderRadius: "4px",
         opacity: 0.9,
-        color: "white",
+        color: ["#e2e8f0", "#fef08a"].includes(backgroundColor) ? "#334155" : "#1e293b", // Darker text for light backgrounds
         border: "0px",
         display: "block",
-        padding: "2px 4px",
-        fontSize: "12px",
-        fontWeight: "500",
+        padding: "2px 6px",
+        fontSize: "13px",
+        fontWeight: "600",
       }
     };
   };
@@ -111,7 +188,9 @@ export default function CalendarPage() {
   };
 
   const handleSelectEvent = (event) => {
-    navigate(`/calendar/${event.id}/edit`);
+    // If it's a generated instance, `event.id` might look like `uuid_instance_1`, split it to edit the original
+    const originalId = event.id.split('_instance_')[0];
+    navigate(`/calendar/${originalId}/edit`);
   };
   
   // Calculate Stats
@@ -119,15 +198,16 @@ export default function CalendarPage() {
   const todayStr = format(today, "yyyy-MM-dd");
   
   const activeEvents = events.filter(e => e.status === "Active");
-  const eventsToday = activeEvents.filter(e => e.startDate <= todayStr && (!e.endDate || e.endDate >= todayStr)).length;
+  const eventsToday = activeEvents.filter(e => e.type !== "Reminder" && format(e.start, "yyyy-MM-dd") <= todayStr && format(e.end, "yyyy-MM-dd") >= todayStr).length;
   
   const thisMonth = today.getMonth();
   const thisYear = today.getFullYear();
-  const birthdaysThisMonth = activeEvents.filter(e => e.type === "Birthday" && new Date(e.startDate).getMonth() === thisMonth).length;
-  const meetingsThisMonth = activeEvents.filter(e => e.type === "Meeting" && new Date(e.startDate).getMonth() === thisMonth).length;
-  const leavesThisMonth = activeEvents.filter(e => e.type === "Leave / Holiday" && new Date(e.startDate).getMonth() === thisMonth).length;
+  const birthdaysThisMonth = activeEvents.filter(e => e.type === "Birthday" && e.start.getMonth() === thisMonth && e.start.getFullYear() === thisYear).length;
+  const meetingsThisMonth = activeEvents.filter(e => e.type === "Meeting" && e.start.getMonth() === thisMonth && e.start.getFullYear() === thisYear).length;
+  const leavesThisMonth = activeEvents.filter(e => e.type === "Leave / Holiday" && e.start.getMonth() === thisMonth && e.start.getFullYear() === thisYear).length;
 
   const filteredEvents = activeEvents.filter(e => {
+    if (e.type === "Reminder") return false; // Hide from calendar grid entirely
     if (filterType !== "All" && e.type !== filterType) return false;
     if (searchTerm && !e.title.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     return true;
@@ -222,6 +302,7 @@ export default function CalendarPage() {
             views={["month", "day"]}
             step={60}
             timeslots={1}
+            messages={{ allDay: "All Day" }}
             components={{
               toolbar: CustomToolbar
             }}

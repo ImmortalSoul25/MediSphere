@@ -24,6 +24,7 @@ function mapRequest(req) {
     requestedOn: req.createdAt || req.created_at,
     concern: req.concern,
     status: req.status,
+    notificationDismissed: req.notificationDismissed || false,
   };
 }
 
@@ -221,6 +222,17 @@ export function AppointmentsProvider({ children }) {
     return fetchJson(`/appointments/patient/${patientId}`);
   }, []);
 
+  const dismissRequestNotification = useCallback(async (requestId) => {
+    try {
+      await fetchJson(`/requests/${requestId}/dismiss`, { method: "PATCH" });
+      await refresh();
+      return null;
+    } catch (err) {
+      console.error(err);
+      return err.message || "Failed to dismiss notification";
+    }
+  }, [refresh]);
+
   return (
     <AppointmentsContext.Provider value={{
       requests, rejectedRequests, expiredRequests, scheduled, past, loading, error,
@@ -233,6 +245,7 @@ export function AppointmentsProvider({ children }) {
       deletePastAppointment,
       addDirectAppointment,
       fetchPatientAppointments,
+      dismissRequestNotification,
     }}>
       {children}
     </AppointmentsContext.Provider>
