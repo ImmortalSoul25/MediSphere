@@ -10,3 +10,5 @@ certifi
 dnspython
 gunicorn
 python-multipart
+python-jose[cryptography]
+bcrypt
