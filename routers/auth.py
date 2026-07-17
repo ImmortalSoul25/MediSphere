@@ -34,8 +34,19 @@ class Token(BaseModel):
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     if not hashed_password:
+        print("[DEBUG] verify_password failed: hashed_password is empty")
         return False
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    try:
+        # Strip any accidental quotes or whitespace that might have been copied from the dashboard
+        clean_hash = hashed_password.strip().strip("'").strip('"')
+        return bcrypt.checkpw(plain_password.encode('utf-8'), clean_hash.encode('utf-8'))
+    except ValueError as e:
+        print(f"[DEBUG] bcrypt ValueError: {e} - Hash was: {hashed_password}")
+        # We raise a 500 with a clear message so the frontend can display it instead of failing blindly
+        raise HTTPException(status_code=500, detail=f"Server misconfiguration: Invalid password hash format in environment variables.")
+    except Exception as e:
+        print(f"[DEBUG] bcrypt Exception: {e}")
+        raise HTTPException(status_code=500, detail="Server misconfiguration: Authentication error.")
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
@@ -72,10 +83,10 @@ async def login(req: LoginRequest):
     if req.role == "receptionist":
         if not verify_password(req.password, rec_hash):
             print("[DEBUG] Verification failed for receptionist")
-            raise HTTPException(status_code=401, detail="Incorrect password")
+            raise HTTPException(status_code=401, detail="Incorrect password. (Or backend env vars are missing!)")
     elif req.role == "doctor":
         if not verify_password(req.password, doc_hash):
-            raise HTTPException(status_code=401, detail="Incorrect password")
+            raise HTTPException(status_code=401, detail="Incorrect password. (Or backend env vars are missing!)")
     else:
         raise HTTPException(status_code=400, detail="Invalid role")
 
