@@ -10,6 +10,10 @@ import { ViewDetailsModal, PatientForm, EMPTY_FORM } from "../Patients";
 const APPT_TYPE_STYLES = {
   "First Consultation": "bg-violet-50 text-violet-700",
   "Follow Up": "bg-teal-50 text-teal-700",
+  "ANC": "bg-fuchsia-50 text-fuchsia-700",
+  "bloodtest": "bg-red-50 text-red-700",
+  "Vaccine": "bg-cyan-50 text-cyan-700",
+  "2nd Opinion": "bg-lime-50 text-lime-700",
   "Surgery": "bg-rose-50 text-rose-700",
   "Routine Check": "bg-sky-50 text-sky-700",
   "Other": "bg-amber-50 text-amber-700",

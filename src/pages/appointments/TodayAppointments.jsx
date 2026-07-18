@@ -30,6 +30,10 @@ function parseTime(timeStr) {
 const APPT_TYPE_STYLES = {
   "First Consultation": "bg-indigo-50 text-indigo-700",
   "Follow Up": "bg-emerald-50 text-emerald-700",
+  "ANC": "bg-fuchsia-50 text-fuchsia-700",
+  "bloodtest": "bg-red-50 text-red-700",
+  "Vaccine": "bg-cyan-50 text-cyan-700",
+  "2nd Opinion": "bg-lime-50 text-lime-700",
   "Surgery": "bg-rose-50 text-rose-700",
   "Sonography": "bg-purple-50 text-purple-700",
   "Meeting": "bg-blue-50 text-blue-700",
@@ -142,18 +146,16 @@ export default function TodayAppointments() {
       groups["Sonography"].push(appt);
     } else if (type === "Meeting") {
       groups["Meetings"].push(appt);
-    } else if (type === "First Consultation" || type === "Follow Up") {
-      // Afternoon: 12:15 PM (735 mins) to 3:00 PM (900 mins)
-      if (timeMins >= 735 && timeMins <= 900) {
+    } else if (
+      ["First Consultation", "Follow Up", "ANC", "bloodtest", "Vaccine", "2nd Opinion"].includes(type)
+    ) {
+      // Before 3:30 PM (930 mins) -> Afternoon
+      if (timeMins <= 930) {
         groups["Afternoon"].push(appt);
       } 
-      // Evening: 6:00 PM (1080 mins) to 8:30 PM (1230 mins)
-      else if (timeMins >= 1080 && timeMins <= 1230) {
-        groups["Evening"].push(appt);
-      } 
-      // Fits no time window
+      // After 3:30 PM (930 mins) -> Evening
       else {
-        groups["Other"].push(appt);
+        groups["Evening"].push(appt);
       }
     } else {
       groups["Other"].push(appt);

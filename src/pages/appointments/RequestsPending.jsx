@@ -284,6 +284,10 @@ function ApproveModal({ request, patients, onConfirm, onClose, onAddPatient }) {
               <option value="" disabled>Select Type</option>
               <option value="First Consultation">First Consultation</option>
               <option value="Follow Up">Follow Up</option>
+              <option value="ANC">ANC</option>
+              <option value="bloodtest">bloodtest</option>
+              <option value="Vaccine">Vaccine</option>
+              <option value="2nd Opinion">2nd Opinion</option>
               <option value="Sonography">Sonography</option>
               <option value="Surgery">Surgery</option>
               <option value="Meeting">Meeting</option>
